@@ -20,7 +20,7 @@ services:
     hostname: mysql
     environment:
       MYSQL_ROOT_PASSWORD: secret
-      MYSQL_DATABASE: idm
+      MYSQL_DATABASE: ojs
     restart: always
     networks:
       - intranet
