@@ -1,0 +1,28 @@
+auth:
+  hash:
+    cost: 32
+  token:
+    duration: 86400 # in seconds
+    rs512_key_pair_bit_size: 2048
+database:
+  type: "mysql"
+  host: "0.0.0.0"
+  port: 3306
+  username: "root"
+  password: "secret"
+  database: "ojs"
+log:
+  level: "debug" # [debug, info, warn, error, panic]
+cache:
+  type: "redis" # [redis, in-memory]
+  addr: "0.0.0.0:6379"
+  username: ""
+  password: ""
+  db: 0
+grpc:
+  address: "0.0.0.0:8080"
+http:
+  address: "0.0.0.0:8081"
+mq:
+  addresses: ["0.0.0.0:9092"]
+  client_id: "1"

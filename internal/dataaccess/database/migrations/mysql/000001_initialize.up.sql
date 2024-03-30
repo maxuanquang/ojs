@@ -10,7 +10,7 @@ CREATE TABLE IF NOT EXISTS `account_password` (
     FOREIGN KEY (`of_account_id`) REFERENCES `account` (`id`)
 );
 
-CREATE TABLE IF NOT EXISTS problem (
+CREATE TABLE IF NOT EXISTS `problem` (
     `id` BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     `display_name` VARCHAR(255) NOT NULL,
     `author_id` BIGINT UNSIGNED NOT NULL,
@@ -20,7 +20,7 @@ CREATE TABLE IF NOT EXISTS problem (
     FOREIGN KEY (`author_id`) REFERENCES `account` (`id`)
 );
 
-CREATE TABLE IF NOT EXISTS test_case (
+CREATE TABLE IF NOT EXISTS `test_case` (
     `id` BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     `of_problem_id` BIGINT UNSIGNED NOT NULL,
     `input` TEXT NOT NULL,
@@ -29,7 +29,7 @@ CREATE TABLE IF NOT EXISTS test_case (
     FOREIGN KEY (`of_problem_id`) REFERENCES `problem` (`id`)
 );
 
-CREATE TABLE IF NOT EXISTS submission (
+CREATE TABLE IF NOT EXISTS `submission` (
     `id` BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     `of_problem_id` BIGINT UNSIGNED NOT NULL,
     `author_id` BIGINT UNSIGNED NOT NULL,
@@ -39,4 +39,9 @@ CREATE TABLE IF NOT EXISTS submission (
     `result` TINYINT NOT NULL,
     FOREIGN KEY (`of_problem_id`) REFERENCES `problem` (`id`),
     FOREIGN KEY (`author_id`) REFERENCES `account` (`id`)
+);
+
+CREATE TABLE IF NOT EXISTS `token_public_key` (
+    `token_public_key_id` BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    `token_public_key_value` VARBINARY(4096) NOT NULL
 );
