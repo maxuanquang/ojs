@@ -1,0 +1,306 @@
+syntax = "proto3";
+package ojs;
+import "validate.proto";
+import "google/api/annotations.proto";
+
+option go_package = "grpc/ojs";
+
+service OjsService {
+    rpc GetServerInfo(GetServerInfoRequest) returns (GetServerInfoResponse) {
+        option (google.api.http) = {
+            get : "/v1/info"
+        };
+    }
+
+    rpc CreateAccount(CreateAccountRequest) returns (CreateAccountResponse) {
+        option (google.api.http) = {
+            post : "/v1/accounts",
+            body : "*"
+        };
+    }
+    rpc GetAccount(GetAccountRequest) returns (GetAccountResponse) {
+        option (google.api.http) = {
+            get : "/v1/accounts/{id}",
+        };
+    }
+
+    rpc CreateSession(CreateSessionRequest) returns (CreateSessionResponse) {
+        option (google.api.http) = {
+            post : "/v1/sessions",
+            body : "*"
+        };
+    }
+    rpc DeleteSession(DeleteSessionRequest) returns (DeleteSessionResponse) {
+        option (google.api.http) = {
+            delete : "/v1/sessions",
+        };
+    }
+
+    rpc CreateProblem(CreateProblemRequest) returns (CreateProblemResponse) {
+        option (google.api.http) = {
+            post : "/v1/problems",
+            body : "*"
+        };
+    }
+    rpc GetProblemList(GetProblemListRequest) returns (GetProblemListResponse) {
+        option (google.api.http) = {
+            get : "/v1/problems",
+        };
+    }
+    rpc GetProblem(GetProblemRequest) returns (GetProblemResponse) {
+        option (google.api.http) = {
+            get : "/v1/problems/{id}",
+        };
+    }
+    rpc UpdateProblem(UpdateProblemRequest) returns (UpdateProblemResponse) {
+        option (google.api.http) = {
+            put : "/v1/problems/{id}",
+            body : "*"
+        };
+    }
+    rpc DeleteProblem(DeleteProblemRequest) returns (DeleteProblemResponse) {
+        option (google.api.http) = {
+            delete : "/v1/problems/{id}",
+        };
+    }
+
+    rpc CreateTestCase(CreateTestCaseRequest) returns (CreateTestCaseResponse) {
+        option (google.api.http) = {
+            post : "/v1/test-cases",
+            body : "*"
+        };
+    }
+    rpc GetProblemTestCaseList(GetProblemTestCaseListRequest) returns (GetProblemTestCaseListResponse) {
+        option (google.api.http) = {
+            get : "/v1/problems/{id}/test-cases",
+        };
+    }
+    rpc GetTestCase(GetTestCaseRequest) returns (GetTestCaseResponse) {
+        option (google.api.http) = {
+            get : "/v1/test-cases/{id}",
+        };
+    }
+    rpc UpdateTestCase(UpdateTestCaseRequest) returns (UpdateTestCaseResponse) {
+        option (google.api.http) = {
+            put : "/v1/test-cases/{id}",
+            body : "*"
+        };
+    }
+    rpc DeleteTestCase(DeleteTestCaseRequest) returns (DeleteTestCaseResponse) {
+        option (google.api.http) = {
+            delete : "/v1/test-cases/{id}",
+        };
+    }
+
+    rpc CreateSubmission(CreateSubmissionRequest) returns (CreateSubmissionResponse) {
+        option (google.api.http) = {
+            post : "/v1/submissions",
+            body : "*"
+        };
+    }
+    rpc GetSubmission(GetSubmissionRequest) returns (GetSubmissionResponse) {
+        option (google.api.http) = {
+            get : "/v1/submissions/{id}",
+        };
+    }
+    rpc GetSubmissionList(GetSubmissionListRequest) returns (GetSubmissionListResponse) {
+        option (google.api.http) = {
+            get : "/v1/submissions",
+        };
+    }
+
+    rpc GetProblemSubmissionList(GetProblemSubmissionListRequest) returns (GetProblemSubmissionListResponse) {
+        option (google.api.http) = {
+            get : "/v1/problems/{id}/submissions",
+        };
+    }
+    rpc GetAccountProblemSubmissionList(GetAccountProblemSubmissionListRequest) returns (GetAccountProblemSubmissionListResponse) {
+        option (google.api.http) = {
+            get : "/v1/accounts/{account_id}/problems/{problem_id}/submissions",
+        };
+    }
+
+    rpc GetAndUpdateFirstSubmittedSubmissionToExecuting(GetAndUpdateFirstSubmittedSubmissionToExecutingRequest) returns (GetAndUpdateFirstSubmittedSubmissionToExecutingResponse) {}
+
+    rpc UpdateSetting(UpdateSettingRequest) returns (UpdateSettingResponse) {}
+}
+
+message GetServerInfoRequest {}
+message GetServerInfoResponse {}
+
+enum Role {
+    UndefinedRole = 0;
+    Admin = 1;
+    Contester = 2;
+}
+
+message CreateAccountRequest {
+    string name = 1 [ (validate.rules).string = {
+        pattern : "^[a-zA-Z0-9]{6,32}$",
+    } ];
+    string password = 2 [ (validate.rules).string = {
+        pattern : "^[a-zA-Z0-9]{6,32}$",
+    } ];
+    Role role = 3;
+}
+message Account {
+    uint64 id = 1;
+    string name = 2;
+    Role role = 3;
+}
+message CreateAccountResponse { Account account = 1; }
+message GetAccountRequest { uint64 id = 1; }
+message GetAccountResponse { Account account = 1; }
+
+message CreateSessionRequest {
+    string name = 1 [ (validate.rules).string = {
+        pattern : "^[a-zA-Z0-9]{6,32}$",
+    } ];
+    string password = 2 [ (validate.rules).string = {
+        pattern : "^[a-zA-Z0-9]{6,32}$",
+    } ];
+}
+message CreateSessionResponse { Account account = 1; }
+message DeleteSessionRequest {}
+message DeleteSessionResponse {}
+
+message CreateProblemRequest {
+    string display_name = 1;
+    string description = 2;
+    uint64 time_limit = 3;
+    uint64 memory_limit = 4;
+}
+message Problem {
+    uint64 id = 1;
+    string display_name = 2;
+    uint64 author_id = 3;
+    string author_name = 4;
+    string description = 5;
+    uint64 time_limit = 6;
+    uint64 memory_limit = 7;
+}
+message CreateProblemResponse { Problem problem = 1; }
+message GetProblemListRequest {
+    uint64 offset = 1;
+    uint64 limit = 2 [ (validate.rules).uint64 = {lte : 100} ];
+}
+message GetProblemListResponse {
+    repeated Problem problem = 1;
+    uint64 total_problem_count = 2;
+}
+message GetProblemRequest { uint64 id = 1; }
+message GetProblemResponse { Problem problem = 1; }
+message UpdateProblemRequest {
+    uint64 id = 1;
+    optional string display_name = 2;
+    optional string description = 3;
+    optional uint64 time_limit = 4;
+    optional uint64 memory_limit = 5;
+}
+message UpdateProblemResponse { Problem problem = 1; }
+message DeleteProblemRequest { uint64 id = 1; }
+message DeleteProblemResponse {}
+
+message CreateTestCaseRequest {
+    uint64 of_problem_id = 1;
+    string input = 2;
+    string output = 3;
+    bool is_hidden = 4;
+}
+message TestCase {
+    uint64 id = 1;
+    uint64 of_problem_id = 2;
+    string input = 3;
+    string output = 4;
+    bool is_hidden = 5;
+}
+message CreateTestCaseResponse { TestCase test_case = 1; }
+message GetProblemTestCaseListRequest {
+    uint64 id = 1;
+    uint64 offset = 2;
+    uint64 limit = 3;
+}
+message GetProblemTestCaseListResponse {
+    repeated TestCase test_cases = 1;
+    uint64 total_test_cases_count = 2;
+}
+message GetTestCaseRequest { uint64 id = 1; }
+message GetTestCaseResponse { TestCase test_case = 1; }
+message UpdateTestCaseRequest {
+    uint64 id = 1;
+    optional string input = 2;
+    optional string output = 3;
+    optional bool is_hidden = 4;
+}
+message UpdateTestCaseResponse { TestCase test_case = 1; }
+message DeleteTestCaseRequest { uint64 id = 1; }
+message DeleteTestCaseResponse {}
+
+message CreateSubmissionRequest {
+    uint64 of_problem_id = 1;
+    uint64 author_id = 2;
+    string content = 3;
+    string language = 4;
+}
+enum SubmissionStatus {
+    UndefinedStatus = 0;
+    Submitted = 1;
+    Executing = 2;
+    Finished = 3;
+}
+enum SubmissionResult {
+    UndefinedResult = 0;
+    OK = 1;
+    ComplieError = 2;
+    RuntimeError = 3;
+    TimeLimitExceeded = 4;
+    MemoryLimitExceeded = 5;
+    WrongAnswer = 6;
+    UnsupportedLanguage = 7;
+}
+message Submission {
+    uint64 id = 1;
+    uint64 of_problem_id = 2;
+    uint64 author_id = 3;
+    string content = 4;
+    string language = 5;
+    SubmissionStatus status = 6;
+    SubmissionResult result = 7;
+}
+message CreateSubmissionResponse { Submission submission = 1; }
+message GetSubmissionRequest { uint64 id = 1; }
+message GetSubmissionResponse { Submission submission = 1; }
+message GetSubmissionListRequest {
+    uint64 offset = 1;
+    uint64 limit = 2;
+}
+message GetSubmissionListResponse {
+    repeated Submission submissions = 1;
+    uint64 total_submissions_count = 2;
+}
+
+message GetProblemSubmissionListRequest {
+    uint64 id = 1;
+    uint64 offset = 2;
+    uint64 limit = 3;
+}
+message GetProblemSubmissionListResponse {
+    repeated Submission submissions = 1;
+    uint64 total_submissions_count = 2;
+}
+message GetAccountProblemSubmissionListRequest {
+    uint64 account_id = 1;
+    uint64 problem_id = 2;
+    uint64 offset = 3;
+    uint64 limit = 4;
+}
+message GetAccountProblemSubmissionListResponse {
+    repeated Submission submissions = 1;
+    uint64 total_submissions_count = 2;
+}
+
+message GetAndUpdateFirstSubmittedSubmissionToExecutingRequest {}
+message GetAndUpdateFirstSubmittedSubmissionToExecutingResponse {}
+
+message UpdateSettingRequest {}
+message UpdateSettingResponse {}

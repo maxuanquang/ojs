@@ -1,0 +1,1151 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "ojs.proto",
+    "version": "version not set"
+  },
+  "tags": [
+    {
+      "name": "OjsService"
+    }
+  ],
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {
+    "/v1/accounts": {
+      "post": {
+        "operationId": "OjsService_CreateAccount",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/ojsCreateAccountResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/ojsCreateAccountRequest"
+            }
+          }
+        ],
+        "tags": [
+          "OjsService"
+        ]
+      }
+    },
+    "/v1/accounts/{accountId}/problems/{problemId}/submissions": {
+      "get": {
+        "operationId": "OjsService_GetAccountProblemSubmissionList",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/ojsGetAccountProblemSubmissionListResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "accountId",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "format": "uint64"
+          },
+          {
+            "name": "problemId",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "format": "uint64"
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "uint64"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "uint64"
+          }
+        ],
+        "tags": [
+          "OjsService"
+        ]
+      }
+    },
+    "/v1/accounts/{id}": {
+      "get": {
+        "operationId": "OjsService_GetAccount",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/ojsGetAccountResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "format": "uint64"
+          }
+        ],
+        "tags": [
+          "OjsService"
+        ]
+      }
+    },
+    "/v1/info": {
+      "get": {
+        "operationId": "OjsService_GetServerInfo",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/ojsGetServerInfoResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "tags": [
+          "OjsService"
+        ]
+      }
+    },
+    "/v1/problems": {
+      "get": {
+        "operationId": "OjsService_GetProblemList",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/ojsGetProblemListResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "uint64"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "uint64"
+          }
+        ],
+        "tags": [
+          "OjsService"
+        ]
+      },
+      "post": {
+        "operationId": "OjsService_CreateProblem",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/ojsCreateProblemResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/ojsCreateProblemRequest"
+            }
+          }
+        ],
+        "tags": [
+          "OjsService"
+        ]
+      }
+    },
+    "/v1/problems/{id}": {
+      "get": {
+        "operationId": "OjsService_GetProblem",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/ojsGetProblemResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "format": "uint64"
+          }
+        ],
+        "tags": [
+          "OjsService"
+        ]
+      },
+      "delete": {
+        "operationId": "OjsService_DeleteProblem",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/ojsDeleteProblemResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "format": "uint64"
+          }
+        ],
+        "tags": [
+          "OjsService"
+        ]
+      },
+      "put": {
+        "operationId": "OjsService_UpdateProblem",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/ojsUpdateProblemResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "format": "uint64"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/OjsServiceUpdateProblemBody"
+            }
+          }
+        ],
+        "tags": [
+          "OjsService"
+        ]
+      }
+    },
+    "/v1/problems/{id}/submissions": {
+      "get": {
+        "operationId": "OjsService_GetProblemSubmissionList",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/ojsGetProblemSubmissionListResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "format": "uint64"
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "uint64"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "uint64"
+          }
+        ],
+        "tags": [
+          "OjsService"
+        ]
+      }
+    },
+    "/v1/problems/{id}/test-cases": {
+      "get": {
+        "operationId": "OjsService_GetProblemTestCaseList",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/ojsGetProblemTestCaseListResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "format": "uint64"
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "uint64"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "uint64"
+          }
+        ],
+        "tags": [
+          "OjsService"
+        ]
+      }
+    },
+    "/v1/sessions": {
+      "delete": {
+        "operationId": "OjsService_DeleteSession",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/ojsDeleteSessionResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "tags": [
+          "OjsService"
+        ]
+      },
+      "post": {
+        "operationId": "OjsService_CreateSession",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/ojsCreateSessionResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/ojsCreateSessionRequest"
+            }
+          }
+        ],
+        "tags": [
+          "OjsService"
+        ]
+      }
+    },
+    "/v1/submissions": {
+      "get": {
+        "operationId": "OjsService_GetSubmissionList",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/ojsGetSubmissionListResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "uint64"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "uint64"
+          }
+        ],
+        "tags": [
+          "OjsService"
+        ]
+      },
+      "post": {
+        "operationId": "OjsService_CreateSubmission",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/ojsCreateSubmissionResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/ojsCreateSubmissionRequest"
+            }
+          }
+        ],
+        "tags": [
+          "OjsService"
+        ]
+      }
+    },
+    "/v1/submissions/{id}": {
+      "get": {
+        "operationId": "OjsService_GetSubmission",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/ojsGetSubmissionResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "format": "uint64"
+          }
+        ],
+        "tags": [
+          "OjsService"
+        ]
+      }
+    },
+    "/v1/test-cases": {
+      "post": {
+        "operationId": "OjsService_CreateTestCase",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/ojsCreateTestCaseResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/ojsCreateTestCaseRequest"
+            }
+          }
+        ],
+        "tags": [
+          "OjsService"
+        ]
+      }
+    },
+    "/v1/test-cases/{id}": {
+      "get": {
+        "operationId": "OjsService_GetTestCase",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/ojsGetTestCaseResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "format": "uint64"
+          }
+        ],
+        "tags": [
+          "OjsService"
+        ]
+      },
+      "delete": {
+        "operationId": "OjsService_DeleteTestCase",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/ojsDeleteTestCaseResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "format": "uint64"
+          }
+        ],
+        "tags": [
+          "OjsService"
+        ]
+      },
+      "put": {
+        "operationId": "OjsService_UpdateTestCase",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/ojsUpdateTestCaseResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "format": "uint64"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/OjsServiceUpdateTestCaseBody"
+            }
+          }
+        ],
+        "tags": [
+          "OjsService"
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "OjsServiceUpdateProblemBody": {
+      "type": "object",
+      "properties": {
+        "displayName": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "timeLimit": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "memoryLimit": {
+          "type": "string",
+          "format": "uint64"
+        }
+      }
+    },
+    "OjsServiceUpdateTestCaseBody": {
+      "type": "object",
+      "properties": {
+        "input": {
+          "type": "string"
+        },
+        "output": {
+          "type": "string"
+        },
+        "isHidden": {
+          "type": "boolean"
+        }
+      }
+    },
+    "ojsAccount": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "name": {
+          "type": "string"
+        },
+        "role": {
+          "$ref": "#/definitions/ojsRole"
+        }
+      }
+    },
+    "ojsCreateAccountRequest": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "password": {
+          "type": "string"
+        },
+        "role": {
+          "$ref": "#/definitions/ojsRole"
+        }
+      }
+    },
+    "ojsCreateAccountResponse": {
+      "type": "object",
+      "properties": {
+        "account": {
+          "$ref": "#/definitions/ojsAccount"
+        }
+      }
+    },
+    "ojsCreateProblemRequest": {
+      "type": "object",
+      "properties": {
+        "displayName": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "timeLimit": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "memoryLimit": {
+          "type": "string",
+          "format": "uint64"
+        }
+      }
+    },
+    "ojsCreateProblemResponse": {
+      "type": "object",
+      "properties": {
+        "problem": {
+          "$ref": "#/definitions/ojsProblem"
+        }
+      }
+    },
+    "ojsCreateSessionRequest": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "password": {
+          "type": "string"
+        }
+      }
+    },
+    "ojsCreateSessionResponse": {
+      "type": "object",
+      "properties": {
+        "account": {
+          "$ref": "#/definitions/ojsAccount"
+        }
+      }
+    },
+    "ojsCreateSubmissionRequest": {
+      "type": "object",
+      "properties": {
+        "ofProblemId": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "authorId": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "content": {
+          "type": "string"
+        },
+        "language": {
+          "type": "string"
+        }
+      }
+    },
+    "ojsCreateSubmissionResponse": {
+      "type": "object",
+      "properties": {
+        "submission": {
+          "$ref": "#/definitions/ojsSubmission"
+        }
+      }
+    },
+    "ojsCreateTestCaseRequest": {
+      "type": "object",
+      "properties": {
+        "ofProblemId": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "input": {
+          "type": "string"
+        },
+        "output": {
+          "type": "string"
+        },
+        "isHidden": {
+          "type": "boolean"
+        }
+      }
+    },
+    "ojsCreateTestCaseResponse": {
+      "type": "object",
+      "properties": {
+        "testCase": {
+          "$ref": "#/definitions/ojsTestCase"
+        }
+      }
+    },
+    "ojsDeleteProblemResponse": {
+      "type": "object"
+    },
+    "ojsDeleteSessionResponse": {
+      "type": "object"
+    },
+    "ojsDeleteTestCaseResponse": {
+      "type": "object"
+    },
+    "ojsGetAccountProblemSubmissionListResponse": {
+      "type": "object",
+      "properties": {
+        "submissions": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/ojsSubmission"
+          }
+        },
+        "totalSubmissionsCount": {
+          "type": "string",
+          "format": "uint64"
+        }
+      }
+    },
+    "ojsGetAccountResponse": {
+      "type": "object",
+      "properties": {
+        "account": {
+          "$ref": "#/definitions/ojsAccount"
+        }
+      }
+    },
+    "ojsGetAndUpdateFirstSubmittedSubmissionToExecutingResponse": {
+      "type": "object"
+    },
+    "ojsGetProblemListResponse": {
+      "type": "object",
+      "properties": {
+        "problem": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/ojsProblem"
+          }
+        },
+        "totalProblemCount": {
+          "type": "string",
+          "format": "uint64"
+        }
+      }
+    },
+    "ojsGetProblemResponse": {
+      "type": "object",
+      "properties": {
+        "problem": {
+          "$ref": "#/definitions/ojsProblem"
+        }
+      }
+    },
+    "ojsGetProblemSubmissionListResponse": {
+      "type": "object",
+      "properties": {
+        "submissions": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/ojsSubmission"
+          }
+        },
+        "totalSubmissionsCount": {
+          "type": "string",
+          "format": "uint64"
+        }
+      }
+    },
+    "ojsGetProblemTestCaseListResponse": {
+      "type": "object",
+      "properties": {
+        "testCases": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/ojsTestCase"
+          }
+        },
+        "totalTestCasesCount": {
+          "type": "string",
+          "format": "uint64"
+        }
+      }
+    },
+    "ojsGetServerInfoResponse": {
+      "type": "object"
+    },
+    "ojsGetSubmissionListResponse": {
+      "type": "object",
+      "properties": {
+        "submissions": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/ojsSubmission"
+          }
+        },
+        "totalSubmissionsCount": {
+          "type": "string",
+          "format": "uint64"
+        }
+      }
+    },
+    "ojsGetSubmissionResponse": {
+      "type": "object",
+      "properties": {
+        "submission": {
+          "$ref": "#/definitions/ojsSubmission"
+        }
+      }
+    },
+    "ojsGetTestCaseResponse": {
+      "type": "object",
+      "properties": {
+        "testCase": {
+          "$ref": "#/definitions/ojsTestCase"
+        }
+      }
+    },
+    "ojsProblem": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "displayName": {
+          "type": "string"
+        },
+        "authorId": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "authorName": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "timeLimit": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "memoryLimit": {
+          "type": "string",
+          "format": "uint64"
+        }
+      }
+    },
+    "ojsRole": {
+      "type": "string",
+      "enum": [
+        "UndefinedRole",
+        "Admin",
+        "Contester"
+      ],
+      "default": "UndefinedRole"
+    },
+    "ojsSubmission": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "ofProblemId": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "authorId": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "content": {
+          "type": "string"
+        },
+        "language": {
+          "type": "string"
+        },
+        "status": {
+          "$ref": "#/definitions/ojsSubmissionStatus"
+        },
+        "result": {
+          "$ref": "#/definitions/ojsSubmissionResult"
+        }
+      }
+    },
+    "ojsSubmissionResult": {
+      "type": "string",
+      "enum": [
+        "UndefinedResult",
+        "OK",
+        "ComplieError",
+        "RuntimeError",
+        "TimeLimitExceeded",
+        "MemoryLimitExceeded",
+        "WrongAnswer",
+        "UnsupportedLanguage"
+      ],
+      "default": "UndefinedResult"
+    },
+    "ojsSubmissionStatus": {
+      "type": "string",
+      "enum": [
+        "UndefinedStatus",
+        "Submitted",
+        "Executing",
+        "Finished"
+      ],
+      "default": "UndefinedStatus"
+    },
+    "ojsTestCase": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "ofProblemId": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "input": {
+          "type": "string"
+        },
+        "output": {
+          "type": "string"
+        },
+        "isHidden": {
+          "type": "boolean"
+        }
+      }
+    },
+    "ojsUpdateProblemResponse": {
+      "type": "object",
+      "properties": {
+        "problem": {
+          "$ref": "#/definitions/ojsProblem"
+        }
+      }
+    },
+    "ojsUpdateSettingResponse": {
+      "type": "object"
+    },
+    "ojsUpdateTestCaseResponse": {
+      "type": "object",
+      "properties": {
+        "testCase": {
+          "$ref": "#/definitions/ojsTestCase"
+        }
+      }
+    },
+    "protobufAny": {
+      "type": "object",
+      "properties": {
+        "@type": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": {}
+    },
+    "rpcStatus": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "message": {
+          "type": "string"
+        },
+        "details": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/protobufAny"
+          }
+        }
+      }
+    }
+  }
+}
