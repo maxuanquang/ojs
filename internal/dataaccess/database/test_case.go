@@ -14,23 +14,22 @@ var (
 )
 
 type TestCase struct {
-	ID           uint64 `gorm:"column:id;primaryKey"`
-	ProblemID    uint64 `gorm:"column:of_problem_id"`
-	Input        string `gorm:"column:input"`
-	Output       string `gorm:"column:output"`
-	IsHidden     bool   `gorm:"column:is_hidden"`
+	ID          uint64 `gorm:"column:id;primaryKey"`
+	OfProblemID uint64 `gorm:"column:of_problem_id"`
+	Input       string `gorm:"column:input"`
+	Output      string `gorm:"column:output"`
+	IsHidden    bool   `gorm:"column:is_hidden"`
 }
 
 type TestCaseDataAccessor interface {
 	CreateTestCase(ctx context.Context, testCase TestCase) (TestCase, error)
 	GetTestCaseByID(ctx context.Context, id uint64) (TestCase, error)
 	DeleteTestCase(ctx context.Context, id uint64) error
-	GetTestCaseOfProblem(ctx context.Context, problemID uint64) ([]TestCase, error)
+	GetProblemTestCaseList(ctx context.Context, problemID uint64, offset uint64, limit uint64) ([]TestCase, error)
+	GetProblemTestCaseCount(ctx context.Context, problemID uint64) (uint64, error)
 	UpdateTestCase(ctx context.Context, testCase TestCase) (TestCase, error)
 	WithDatabaseTransaction(database Database) TestCaseDataAccessor
 }
-
-
 
 func NewTestCaseDataAccessor(database Database, logger *zap.Logger) TestCaseDataAccessor {
 	return &testCaseDataAccessor{
@@ -47,14 +46,14 @@ type testCaseDataAccessor struct {
 // CreateTestCase implements TestCaseDataAccessor.
 func (t *testCaseDataAccessor) CreateTestCase(ctx context.Context, testCase TestCase) (TestCase, error) {
 	createdTestCase := TestCase{
-		ProblemID: testCase.ProblemID,
-		Input:     testCase.Input,
-		Output:    testCase.Output,
-		IsHidden:  testCase.IsHidden,
+		OfProblemID: testCase.OfProblemID,
+		Input:       testCase.Input,
+		Output:      testCase.Output,
+		IsHidden:    testCase.IsHidden,
 	}
 	result := t.database.Create(&createdTestCase)
 	if result.Error != nil {
-		logger := utils.LoggerWithContext(ctx, t.logger).With(zap.Uint64("problem_id", testCase.ProblemID))
+		logger := utils.LoggerWithContext(ctx, t.logger).With(zap.Uint64("problem_id", testCase.OfProblemID))
 		logger.Error("error creating test case", zap.Error(result.Error))
 		return TestCase{}, result.Error
 	}
@@ -116,9 +115,15 @@ func (t *testCaseDataAccessor) UpdateTestCase(ctx context.Context, testCase Test
 		return TestCase{}, result.Error
 	}
 
-	existingTestCase.Input = testCase.Input
-	existingTestCase.Output = testCase.Output
-	existingTestCase.IsHidden = testCase.IsHidden
+	if testCase.Input != "" {
+		existingTestCase.Input = testCase.Input
+	}
+	if testCase.Output != "" {
+		existingTestCase.Output = testCase.Output
+	}
+	if testCase.IsHidden != existingTestCase.IsHidden {
+		existingTestCase.IsHidden = testCase.IsHidden
+	}
 
 	result = t.database.Save(&existingTestCase)
 	if result.Error != nil {
@@ -130,10 +135,10 @@ func (t *testCaseDataAccessor) UpdateTestCase(ctx context.Context, testCase Test
 	return existingTestCase, nil
 }
 
-// GetTestCaseOfProblem implements TestCaseDataAccessor.
-func (t *testCaseDataAccessor) GetTestCaseOfProblem(ctx context.Context, problemID uint64) ([]TestCase, error) {
+// GetProblemTestCaseList implements TestCaseDataAccessor.
+func (t *testCaseDataAccessor) GetProblemTestCaseList(ctx context.Context, problemID uint64, offset uint64, limit uint64) ([]TestCase, error) {
 	var testCases []TestCase
-	result := t.database.Where("of_problem_id = ?", problemID).Find(&testCases)
+	result := t.database.Where("of_problem_id = ?", problemID).Offset(int(offset)).Limit(int(limit)).Find(&testCases)
 	if result.Error != nil {
 		logger := utils.LoggerWithContext(ctx, t.logger).With(zap.Uint64("problem_id", problemID))
 		logger.Error("error getting test cases of problem", zap.Error(result.Error))
@@ -141,6 +146,17 @@ func (t *testCaseDataAccessor) GetTestCaseOfProblem(ctx context.Context, problem
 	}
 
 	return testCases, nil
+}
+
+func (t *testCaseDataAccessor) GetProblemTestCaseCount(ctx context.Context, problemID uint64) (uint64, error) {
+	var count int64
+	result := t.database.Model(&TestCase{}).Where("of_problem_id = ?", problemID).Count(&count)
+	if result.Error != nil {
+		logger := utils.LoggerWithContext(ctx, t.logger).With(zap.Uint64("problem_id", problemID))
+		logger.Error("error getting problem test case count", zap.Error(result.Error))
+		return 0, result.Error
+	}
+	return uint64(count), nil
 }
 
 // WithDatabaseTransaction implements TestCaseDataAccessor.

@@ -13,6 +13,7 @@ import (
 var (
 	ErrProblemNotFound  = status.Error(codes.NotFound, "problem not found")
 	ErrPermissionDenied = status.Error(codes.PermissionDenied, "permission denied")
+	ErrTestCaseNotFound = status.Error(codes.NotFound, "test case not found")
 )
 
 type ProblemLogic interface {
@@ -22,11 +23,11 @@ type ProblemLogic interface {
 	UpdateProblem(ctx context.Context, in UpdateProblemInput) (UpdateProblemOutput, error)
 	DeleteProblem(ctx context.Context, in DeleteProblemInput) error
 
-	// CreateTestCase(ctx context.Context, in CreateTestCaseInput) (CreateTestCaseOutput, error)
-	// GetTestCase(ctx context.Context, in GetTestCaseInput) (GetTestCaseOutput, error)
-	// GetProblemTestCaseList(ctx context.Context, in GetProblemTestCaseListInput) (GetProblemTestCaseListOutput, error)
-	// UpdateTestCase(ctx context.Context, in UpdateTestCaseInput) (UpdateTestCaseOutput, error)
-	// DeleteTestCase(ctx context.Context, in DeleteTestCaseInput) (DeleteTestCaseOutput, error)
+	CreateTestCase(ctx context.Context, in CreateTestCaseInput) (CreateTestCaseOutput, error)
+	GetTestCase(ctx context.Context, in GetTestCaseInput) (GetTestCaseOutput, error)
+	GetProblemTestCaseList(ctx context.Context, in GetProblemTestCaseListInput) (GetProblemTestCaseListOutput, error)
+	UpdateTestCase(ctx context.Context, in UpdateTestCaseInput) (UpdateTestCaseOutput, error)
+	DeleteTestCase(ctx context.Context, in DeleteTestCaseInput) error
 
 	// CreateSubmission(ctx context.Context, in CreateSubmissionInput) (CreateSubmissionOutput, error)
 	// GetSubmission(ctx context.Context, in GetSubmissionInput) (GetSubmissionOutput, error)
@@ -36,13 +37,20 @@ type ProblemLogic interface {
 	// GetProblemSubmissionList(ctx context.Context, in GetProblemSubmissionListInput) (GetProblemSubmissionListOutput, error)
 }
 
-func NewProblemLogic(logger *zap.Logger, accountDataAccessor database.AccountDataAccessor, problemDataAccessor database.ProblemDataAccessor, submissionDataAccessor database.SubmissionDataAccessor, testCaseDataAccessor database.TestCaseDataAccessor, tokenLogic TokenLogic) ProblemLogic {
+func NewProblemLogic(
+	logger *zap.Logger,
+	accountDataAccessor database.AccountDataAccessor,
+	problemDataAccessor database.ProblemDataAccessor,
+	submissionDataAccessor database.SubmissionDataAccessor,
+	testCaseDataAccessor database.TestCaseDataAccessor,
+	tokenLogic TokenLogic,
+) ProblemLogic {
 	return &problemLogic{
 		logger:                 logger,
 		accountDataAccessor:    accountDataAccessor,
 		problemDataAccessor:    problemDataAccessor,
 		submissionDataAccessor: submissionDataAccessor,
-		testCaseDataAcessor:    testCaseDataAccessor,
+		testCaseDataAccessor:   testCaseDataAccessor,
 		tokenLogic:             tokenLogic,
 	}
 }
@@ -52,7 +60,7 @@ type problemLogic struct {
 	accountDataAccessor    database.AccountDataAccessor
 	problemDataAccessor    database.ProblemDataAccessor
 	submissionDataAccessor database.SubmissionDataAccessor
-	testCaseDataAcessor    database.TestCaseDataAccessor
+	testCaseDataAccessor   database.TestCaseDataAccessor
 	tokenLogic             TokenLogic
 }
 
@@ -80,7 +88,7 @@ func (p *problemLogic) CreateProblem(ctx context.Context, in CreateProblemInput)
 
 	return CreateProblemOutput{
 		Problem: Problem{
-			Id:          createdProblem.ID,
+			ID:          createdProblem.ID,
 			DisplayName: createdProblem.DisplayName,
 			AuthorId:    createdProblem.AuthorID,
 			Description: createdProblem.Description,
@@ -94,7 +102,7 @@ func (p *problemLogic) GetProblem(ctx context.Context, in GetProblemInput) (GetP
 	logger := p.logger.With(zap.Any("get_problem_input", in))
 
 	// Retrieve the problem from the database
-	problem, err := p.problemDataAccessor.GetProblemByID(ctx, in.Id)
+	problem, err := p.problemDataAccessor.GetProblemByID(ctx, in.ID)
 	if err != nil {
 		logger.Error("failed to get problem", zap.Error(err))
 		return GetProblemOutput{}, err
@@ -107,7 +115,7 @@ func (p *problemLogic) GetProblem(ctx context.Context, in GetProblemInput) (GetP
 
 	return GetProblemOutput{
 		Problem: Problem{
-			Id:          problem.ID,
+			ID:          problem.ID,
 			DisplayName: problem.DisplayName,
 			AuthorId:    problem.AuthorID,
 			Description: problem.Description,
@@ -135,7 +143,7 @@ func (p *problemLogic) GetProblemList(ctx context.Context, in GetProblemListInpu
 	var problemList []Problem
 	for _, pb := range problems {
 		problemList = append(problemList, Problem{
-			Id:          pb.ID,
+			ID:          pb.ID,
 			DisplayName: pb.DisplayName,
 			AuthorId:    pb.AuthorID,
 			Description: pb.Description,
@@ -163,7 +171,7 @@ func (p *problemLogic) UpdateProblem(ctx context.Context, in UpdateProblemInput)
 	}
 
 	// Check if the problem exists
-	problem, err := p.problemDataAccessor.GetProblemByID(ctx, in.Id)
+	problem, err := p.problemDataAccessor.GetProblemByID(ctx, in.ID)
 	if err != nil {
 		logger.Error("failed to get problem", zap.Error(err))
 		return UpdateProblemOutput{}, err
@@ -178,7 +186,7 @@ func (p *problemLogic) UpdateProblem(ctx context.Context, in UpdateProblemInput)
 	}
 
 	// Update the problem in the database
-	updatedProblem, err := p.problemDataAccessor.UpdateProblem(ctx, in.Id, database.Problem{
+	updatedProblem, err := p.problemDataAccessor.UpdateProblem(ctx, in.ID, database.Problem{
 		DisplayName: in.DisplayName,
 		Description: in.Description,
 		TimeLimit:   in.TimeLimit,
@@ -191,7 +199,7 @@ func (p *problemLogic) UpdateProblem(ctx context.Context, in UpdateProblemInput)
 
 	return UpdateProblemOutput{
 		Problem: Problem{
-			Id:          updatedProblem.ID,
+			ID:          updatedProblem.ID,
 			DisplayName: updatedProblem.DisplayName,
 			AuthorId:    updatedProblem.AuthorID,
 			AuthorName:  accountName,
@@ -206,7 +214,7 @@ func (p *problemLogic) DeleteProblem(ctx context.Context, in DeleteProblemInput)
 	logger := p.logger.With(zap.String("method", "DeleteProblem"))
 
 	// Check if the problem exists
-	problem, err := p.problemDataAccessor.GetProblemByID(ctx, in.Id)
+	problem, err := p.problemDataAccessor.GetProblemByID(ctx, in.ID)
 	if err != nil {
 		logger.Error("failed to get problem", zap.Error(err))
 		return err
@@ -218,9 +226,156 @@ func (p *problemLogic) DeleteProblem(ctx context.Context, in DeleteProblemInput)
 	}
 
 	// Delete the problem from the database
-	err = p.problemDataAccessor.DeleteProblem(ctx, in.Id)
+	err = p.problemDataAccessor.DeleteProblem(ctx, in.ID)
 	if err != nil {
 		logger.Error("failed to delete problem", zap.Error(err))
+		return err
+	}
+
+	return nil
+}
+
+func (t *problemLogic) CreateTestCase(ctx context.Context, in CreateTestCaseInput) (CreateTestCaseOutput, error) {
+	logger := t.logger.With(zap.Any("create_test_case_input", in))
+
+	// Create the test case in the database
+	createdTestCase, err := t.testCaseDataAccessor.CreateTestCase(ctx, database.TestCase{
+		OfProblemID: in.OfProblemID,
+		Input:       in.Input,
+		Output:      in.Output,
+		IsHidden:    in.IsHidden,
+	})
+	if err != nil {
+		logger.Error("failed to create test case", zap.Error(err))
+		return CreateTestCaseOutput{}, err
+	}
+
+	return CreateTestCaseOutput{
+		TestCase: TestCase{
+			ID:          createdTestCase.ID,
+			OfProblemID: createdTestCase.OfProblemID,
+			Input:       createdTestCase.Input,
+			Output:      createdTestCase.Output,
+			IsHidden:    createdTestCase.IsHidden,
+		},
+	}, nil
+}
+
+func (t *problemLogic) GetTestCase(ctx context.Context, in GetTestCaseInput) (GetTestCaseOutput, error) {
+	logger := t.logger.With(zap.Any("get_test_case_input", in))
+
+	// Retrieve the test case from the database
+	testCase, err := t.testCaseDataAccessor.GetTestCaseByID(ctx, in.ID)
+	if err != nil {
+		logger.Error("failed to get test case", zap.Error(err))
+		return GetTestCaseOutput{}, err
+	}
+	if testCase.ID == 0 {
+		err := ErrTestCaseNotFound
+		logger.Error("test case not found", zap.Error(err))
+		return GetTestCaseOutput{}, err
+	}
+
+	return GetTestCaseOutput{
+		TestCase: TestCase{
+			ID:          testCase.ID,
+			OfProblemID: testCase.OfProblemID,
+			Input:       testCase.Input,
+			Output:      testCase.Output,
+			IsHidden:    testCase.IsHidden,
+		},
+	}, nil
+}
+
+func (t *problemLogic) GetProblemTestCaseList(ctx context.Context, in GetProblemTestCaseListInput) (GetProblemTestCaseListOutput, error) {
+	logger := t.logger.With(zap.String("method", "GetProblemTestCaseList"))
+
+	// Retrieve the list of test cases for a problem from the database
+	testCases, err := t.testCaseDataAccessor.GetProblemTestCaseList(ctx, in.OfProblemID, in.Offset, in.Limit)
+	if err != nil {
+		logger.Error("failed to get test case list", zap.Error(err))
+		return GetProblemTestCaseListOutput{}, err
+	}
+
+	var testCaseList []TestCase
+	for _, tc := range testCases {
+		testCaseList = append(testCaseList, TestCase{
+			ID:          tc.ID,
+			OfProblemID: tc.OfProblemID,
+			Input:       tc.Input,
+			Output:      tc.Output,
+		})
+	}
+
+	totalTestCasesCount, err := t.testCaseDataAccessor.GetProblemTestCaseCount(ctx, in.OfProblemID)
+	if err != nil {
+		logger.Error("failed to get test case count", zap.Error(err))
+		return GetProblemTestCaseListOutput{}, err
+	}
+
+	return GetProblemTestCaseListOutput{
+		TestCases:           testCaseList,
+		TotalTestCasesCount: totalTestCasesCount,
+	}, nil
+}
+
+func (t *problemLogic) UpdateTestCase(ctx context.Context, in UpdateTestCaseInput) (UpdateTestCaseOutput, error) {
+	logger := t.logger.With(zap.String("method", "UpdateTestCase"))
+
+	// Check if the test case exists
+	testCase, err := t.testCaseDataAccessor.GetTestCaseByID(ctx, in.ID)
+	if err != nil {
+		logger.Error("failed to get test case", zap.Error(err))
+		return UpdateTestCaseOutput{}, err
+	}
+	if testCase.ID == 0 {
+		err := ErrTestCaseNotFound
+		logger.Error("test case not found", zap.Error(err))
+		return UpdateTestCaseOutput{}, err
+	}
+
+	// Update the test case in the database
+	updatedTestCase, err := t.testCaseDataAccessor.UpdateTestCase(ctx, database.TestCase{
+		ID:          in.ID,
+		Input:       in.Input,
+		Output:      in.Output,
+		IsHidden:    in.IsHidden,
+	})
+	if err != nil {
+		logger.Error("failed to update test case", zap.Error(err))
+		return UpdateTestCaseOutput{}, err
+	}
+
+	return UpdateTestCaseOutput{
+		TestCase: TestCase{
+			ID:          updatedTestCase.ID,
+			OfProblemID: updatedTestCase.OfProblemID,
+			Input:       updatedTestCase.Input,
+			Output:      updatedTestCase.Output,
+			IsHidden:    updatedTestCase.IsHidden,
+		},
+	}, nil
+}
+
+func (t *problemLogic) DeleteTestCase(ctx context.Context, in DeleteTestCaseInput) error {
+	logger := t.logger.With(zap.String("method", "DeleteTestCase"))
+
+	// Check if the test case exists
+	testCase, err := t.testCaseDataAccessor.GetTestCaseByID(ctx, in.ID)
+	if err != nil {
+		logger.Error("failed to get test case", zap.Error(err))
+		return err
+	}
+	if testCase.ID == 0 {
+		err := ErrTestCaseNotFound
+		logger.Error("test case not found", zap.Error(err))
+		return err
+	}
+
+	// Delete the test case from the database
+	err = t.testCaseDataAccessor.DeleteTestCase(ctx, in.ID)
+	if err != nil {
+		logger.Error("failed to delete test case", zap.Error(err))
 		return err
 	}
 
@@ -240,7 +395,7 @@ type CreateProblemOutput struct {
 }
 
 type Problem struct {
-	Id          uint64
+	ID          uint64
 	DisplayName string
 	AuthorId    uint64
 	AuthorName  string
@@ -262,7 +417,7 @@ type GetProblemListOutput struct {
 
 type GetProblemInput struct {
 	Token string
-	Id    uint64
+	ID    uint64
 }
 
 type GetProblemOutput struct {
@@ -271,7 +426,7 @@ type GetProblemOutput struct {
 
 type UpdateProblemInput struct {
 	Token       string
-	Id          uint64
+	ID          uint64
 	DisplayName string
 	Description string
 	TimeLimit   uint64
@@ -284,5 +439,59 @@ type UpdateProblemOutput struct {
 
 type DeleteProblemInput struct {
 	Token string
-	Id    uint64
+	ID    uint64
 }
+
+type TestCase struct {
+	ID          uint64
+	OfProblemID uint64
+	Input       string
+	Output      string
+	IsHidden    bool
+}
+type CreateTestCaseInput struct {
+	OfProblemID uint64
+	Input       string
+	Output      string
+	IsHidden    bool
+}
+
+type CreateTestCaseOutput struct {
+	TestCase TestCase
+}
+
+type GetTestCaseInput struct {
+	ID uint64
+}
+
+type GetTestCaseOutput struct {
+	TestCase TestCase
+}
+
+type GetProblemTestCaseListInput struct {
+	OfProblemID uint64
+	Offset      uint64
+	Limit       uint64
+}
+
+type GetProblemTestCaseListOutput struct {
+	TestCases           []TestCase
+	TotalTestCasesCount uint64
+}
+
+type UpdateTestCaseInput struct {
+	ID          uint64
+	Input       string
+	Output      string
+	IsHidden    bool
+}
+
+type UpdateTestCaseOutput struct {
+	TestCase TestCase
+}
+
+type DeleteTestCaseInput struct {
+	ID uint64
+}
+
+type DeleteTestCaseOutput struct{}
