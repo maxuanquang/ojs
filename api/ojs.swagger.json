@@ -813,10 +813,6 @@
           "type": "string",
           "format": "uint64"
         },
-        "authorId": {
-          "type": "string",
-          "format": "uint64"
-        },
         "content": {
           "type": "string"
         },

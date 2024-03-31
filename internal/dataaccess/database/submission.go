@@ -14,21 +14,24 @@ var (
 )
 
 type Submission struct {
-	ID           uint64 `gorm:"column:id;primaryKey"`
-	OfProblemID  uint64 `gorm:"column:of_problem_id"`
-	AuthorID     uint64 `gorm:"column:author_id"`
-	Content      string `gorm:"column:content"`
-	Language     string `gorm:"column:language"`
-	Status       int8   `gorm:"column:status"`
-	Result       int8   `gorm:"column:result"`
+	ID          uint64 `gorm:"column:id;primaryKey"`
+	OfProblemID uint64 `gorm:"column:of_problem_id"`
+	AuthorID    uint64 `gorm:"column:author_id"`
+	Content     string `gorm:"column:content"`
+	Language    string `gorm:"column:language"`
+	Status      int8   `gorm:"column:status"`
+	Result      int8   `gorm:"column:result"`
 }
 
 type SubmissionDataAccessor interface {
 	CreateSubmission(ctx context.Context, submission Submission) (Submission, error)
 	GetSubmissionByID(ctx context.Context, id uint64) (Submission, error)
 	GetSubmissionList(ctx context.Context, offset, limit uint64) ([]Submission, error)
+	GetSubmissionCount(ctx context.Context) (uint64, error)
 	GetProblemSubmissionList(ctx context.Context, problemID, offset, limit uint64) ([]Submission, error)
+	GetProblemSubmissionCount(ctx context.Context, problemID uint64) (uint64, error)
 	GetAccountProblemSubmissionList(ctx context.Context, accountID, problemID, offset, limit uint64) ([]Submission, error)
+	GetAccountProblemSubmissionCount(ctx context.Context, accountID, problemID uint64) (uint64, error)
 	UpdateSubmission(ctx context.Context, submission Submission) (Submission, error)
 	DeleteSubmission(ctx context.Context, id uint64) error
 	WithDatabaseTransaction(database Database) SubmissionDataAccessor
@@ -96,6 +99,14 @@ func (s *submissionDataAccessor) GetSubmissionList(ctx context.Context, offset, 
 	return submissions, nil
 }
 
+func (s *submissionDataAccessor) GetSubmissionCount(ctx context.Context) (uint64, error) {
+	var count int64
+	if err := s.database.Model(&Submission{}).Count(&count).Error; err != nil {
+		return 0, err
+	}
+	return uint64(count), nil
+}
+
 // GetProblemSubmissionList implements SubmissionDataAccessor.
 func (s *submissionDataAccessor) GetProblemSubmissionList(ctx context.Context, problemID, offset, limit uint64) ([]Submission, error) {
 	var submissions []Submission
@@ -109,6 +120,14 @@ func (s *submissionDataAccessor) GetProblemSubmissionList(ctx context.Context, p
 	return submissions, nil
 }
 
+func (s *submissionDataAccessor) GetProblemSubmissionCount(ctx context.Context, problemID uint64) (uint64, error) {
+	var count int64
+	if err := s.database.Model(&Submission{}).Where("of_problem_id = ?", problemID).Count(&count).Error; err != nil {
+		return 0, err
+	}
+	return uint64(count), nil
+}
+
 // GetAccountProblemSubmissionList implements SubmissionDataAccessor.
 func (s *submissionDataAccessor) GetAccountProblemSubmissionList(ctx context.Context, accountID, problemID, offset, limit uint64) ([]Submission, error) {
 	var submissions []Submission
@@ -120,6 +139,14 @@ func (s *submissionDataAccessor) GetAccountProblemSubmissionList(ctx context.Con
 	}
 
 	return submissions, nil
+}
+
+func (s *submissionDataAccessor) GetAccountProblemSubmissionCount(ctx context.Context, accountID, problemID uint64) (uint64, error) {
+	var count int64
+	if err := s.database.Model(&Submission{}).Where("author_id = ? AND of_problem_id = ?", accountID, problemID).Count(&count).Error; err != nil {
+		return 0, err
+	}
+	return uint64(count), nil
 }
 
 // UpdateSubmission implements SubmissionDataAccessor.

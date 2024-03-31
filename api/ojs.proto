@@ -238,9 +238,8 @@ message DeleteTestCaseResponse {}
 
 message CreateSubmissionRequest {
     uint64 of_problem_id = 1;
-    uint64 author_id = 2;
-    string content = 3;
-    string language = 4;
+    string content = 2;
+    string language = 3;
 }
 enum SubmissionStatus {
     UndefinedStatus = 0;

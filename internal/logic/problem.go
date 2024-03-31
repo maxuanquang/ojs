@@ -29,12 +29,11 @@ type ProblemLogic interface {
 	UpdateTestCase(ctx context.Context, in UpdateTestCaseInput) (UpdateTestCaseOutput, error)
 	DeleteTestCase(ctx context.Context, in DeleteTestCaseInput) error
 
-	// CreateSubmission(ctx context.Context, in CreateSubmissionInput) (CreateSubmissionOutput, error)
-	// GetSubmission(ctx context.Context, in GetSubmissionInput) (GetSubmissionOutput, error)
-	// GetSubmissionList(ctx context.Context, in GetSubmissionListInput) (GetSubmissionListOutput, error)
-
-	// GetAccountProblemSubmissionList(ctx context.Context, in GetAccountProblemSubmissionListInput) (GetAccountProblemSubmissionListOutput, error)
-	// GetProblemSubmissionList(ctx context.Context, in GetProblemSubmissionListInput) (GetProblemSubmissionListOutput, error)
+	CreateSubmission(ctx context.Context, in CreateSubmissionInput) (CreateSubmissionOutput, error)
+	GetSubmission(ctx context.Context, in GetSubmissionInput) (GetSubmissionOutput, error)
+	GetSubmissionList(ctx context.Context, in GetSubmissionListInput) (GetSubmissionListOutput, error)
+	GetAccountProblemSubmissionList(ctx context.Context, in GetAccountProblemSubmissionListInput) (GetAccountProblemSubmissionListOutput, error)
+	GetProblemSubmissionList(ctx context.Context, in GetProblemSubmissionListInput) (GetProblemSubmissionListOutput, error)
 }
 
 func NewProblemLogic(
@@ -336,10 +335,10 @@ func (t *problemLogic) UpdateTestCase(ctx context.Context, in UpdateTestCaseInpu
 
 	// Update the test case in the database
 	updatedTestCase, err := t.testCaseDataAccessor.UpdateTestCase(ctx, database.TestCase{
-		ID:          in.ID,
-		Input:       in.Input,
-		Output:      in.Output,
-		IsHidden:    in.IsHidden,
+		ID:       in.ID,
+		Input:    in.Input,
+		Output:   in.Output,
+		IsHidden: in.IsHidden,
 	})
 	if err != nil {
 		logger.Error("failed to update test case", zap.Error(err))
@@ -380,6 +379,166 @@ func (t *problemLogic) DeleteTestCase(ctx context.Context, in DeleteTestCaseInpu
 	}
 
 	return nil
+}
+
+func (p *problemLogic) CreateSubmission(ctx context.Context, in CreateSubmissionInput) (CreateSubmissionOutput, error) {
+	// Verify token
+	accountID, _, _, _, err := p.tokenLogic.VerifyTokenString(ctx, in.Token)
+	if err != nil {
+		p.logger.Error("Failed to verify token", zap.Error(err))
+		return CreateSubmissionOutput{}, err
+	}
+
+	// Create submission in the database
+	createdSubmission, err := p.submissionDataAccessor.CreateSubmission(ctx, database.Submission{
+		OfProblemID: in.OfProblemID,
+		AuthorID:    accountID,
+		Content:     in.Content,
+		Language:    in.Language,
+	})
+	if err != nil {
+		p.logger.Error("Failed to create submission", zap.Error(err))
+		return CreateSubmissionOutput{}, err
+	}
+
+	return CreateSubmissionOutput{
+		Submission: Submission{
+			ID:          createdSubmission.ID,
+			OfProblemID: createdSubmission.OfProblemID,
+			AuthorID:    createdSubmission.AuthorID,
+			Content:     createdSubmission.Content,
+			Language:    createdSubmission.Language,
+			Status:      ojs.SubmissionStatus(createdSubmission.Status),
+			Result:      ojs.SubmissionResult(createdSubmission.Result),
+		},
+	}, nil
+}
+
+func (p *problemLogic) GetSubmission(ctx context.Context, in GetSubmissionInput) (GetSubmissionOutput, error) {
+	// Retrieve submission from the database
+	submission, err := p.submissionDataAccessor.GetSubmissionByID(ctx, in.ID)
+	if err != nil {
+		p.logger.Error("Failed to get submission", zap.Error(err))
+		return GetSubmissionOutput{}, err
+	}
+
+	return GetSubmissionOutput{
+		Submission: Submission{
+			ID:          submission.ID,
+			OfProblemID: submission.OfProblemID,
+			AuthorID:    submission.AuthorID,
+			Content:     submission.Content,
+			Language:    submission.Language,
+			Status:      ojs.SubmissionStatus(submission.Status),
+			Result:      ojs.SubmissionResult(submission.Result),
+		},
+	}, nil
+}
+
+func (p *problemLogic) GetSubmissionList(ctx context.Context, in GetSubmissionListInput) (GetSubmissionListOutput, error) {
+	// Retrieve submission list from the database
+	submissions, err := p.submissionDataAccessor.GetSubmissionList(ctx, in.Offset, in.Limit)
+	if err != nil {
+		p.logger.Error("Failed to get submission list", zap.Error(err))
+		return GetSubmissionListOutput{}, err
+	}
+
+	var submissionList []Submission
+	for _, s := range submissions {
+		submissionList = append(submissionList, Submission{
+			ID:          s.ID,
+			OfProblemID: s.OfProblemID,
+			AuthorID:    s.AuthorID,
+			Content:     s.Content,
+			Language:    s.Language,
+			Status:      ojs.SubmissionStatus(s.Status),
+			Result:      ojs.SubmissionResult(s.Result),
+		})
+	}
+
+	totalSubmissionsCount, err := p.submissionDataAccessor.GetSubmissionCount(ctx)
+	if err != nil {
+		p.logger.Error("Failed to get submission count", zap.Error(err))
+		return GetSubmissionListOutput{}, err
+	}
+
+	return GetSubmissionListOutput{
+		Submissions:           submissionList,
+		TotalSubmissionsCount: totalSubmissionsCount,
+	}, nil
+}
+
+func (p *problemLogic) GetAccountProblemSubmissionList(ctx context.Context, in GetAccountProblemSubmissionListInput) (GetAccountProblemSubmissionListOutput, error) {
+	// Verify token
+	accountID, _, _, _, err := p.tokenLogic.VerifyTokenString(ctx, in.Token)
+	if err != nil {
+		p.logger.Error("Failed to verify token", zap.Error(err))
+		return GetAccountProblemSubmissionListOutput{}, err
+	}
+
+	// Retrieve account's submission list for a specific problem from the database
+	submissions, err := p.submissionDataAccessor.GetAccountProblemSubmissionList(ctx, accountID, in.OfProblemID, in.Offset, in.Limit)
+	if err != nil {
+		p.logger.Error("Failed to get account's problem submission list", zap.Error(err))
+		return GetAccountProblemSubmissionListOutput{}, err
+	}
+
+	var submissionList []Submission
+	for _, s := range submissions {
+		submissionList = append(submissionList, Submission{
+			ID:          s.ID,
+			OfProblemID: s.OfProblemID,
+			AuthorID:    s.AuthorID,
+			Content:     s.Content,
+			Language:    s.Language,
+			Status:      ojs.SubmissionStatus(s.Status),
+			Result:      ojs.SubmissionResult(s.Result),
+		})
+	}
+
+	totalSubmissionsCount, err := p.submissionDataAccessor.GetAccountProblemSubmissionCount(ctx, accountID, in.OfProblemID)
+	if err != nil {
+		p.logger.Error("Failed to get account's problem submission count", zap.Error(err))
+		return GetAccountProblemSubmissionListOutput{}, err
+	}
+
+	return GetAccountProblemSubmissionListOutput{
+		Submissions:           submissionList,
+		TotalSubmissionsCount: totalSubmissionsCount,
+	}, nil
+}
+
+func (p *problemLogic) GetProblemSubmissionList(ctx context.Context, in GetProblemSubmissionListInput) (GetProblemSubmissionListOutput, error) {
+	// Retrieve problem's submission list from the database
+	submissions, err := p.submissionDataAccessor.GetProblemSubmissionList(ctx, in.OfProblemID, in.Offset, in.Limit)
+	if err != nil {
+		p.logger.Error("Failed to get problem submission list", zap.Error(err))
+		return GetProblemSubmissionListOutput{}, err
+	}
+
+	var submissionList []Submission
+	for _, s := range submissions {
+		submissionList = append(submissionList, Submission{
+			ID:          s.ID,
+			OfProblemID: s.OfProblemID,
+			AuthorID:    s.AuthorID,
+			Content:     s.Content,
+			Language:    s.Language,
+			Status:      ojs.SubmissionStatus(s.Status),
+			Result:      ojs.SubmissionResult(s.Result),
+		})
+	}
+
+	totalSubmissionsCount, err := p.submissionDataAccessor.GetProblemSubmissionCount(ctx, in.OfProblemID)
+	if err != nil {
+		p.logger.Error("Failed to get problem submission count", zap.Error(err))
+		return GetProblemSubmissionListOutput{}, err
+	}
+
+	return GetProblemSubmissionListOutput{
+		Submissions:           submissionList,
+		TotalSubmissionsCount: totalSubmissionsCount,
+	}, nil
 }
 
 type CreateProblemInput struct {
@@ -480,10 +639,10 @@ type GetProblemTestCaseListOutput struct {
 }
 
 type UpdateTestCaseInput struct {
-	ID          uint64
-	Input       string
-	Output      string
-	IsHidden    bool
+	ID       uint64
+	Input    string
+	Output   string
+	IsHidden bool
 }
 
 type UpdateTestCaseOutput struct {
@@ -495,3 +654,67 @@ type DeleteTestCaseInput struct {
 }
 
 type DeleteTestCaseOutput struct{}
+
+type CreateSubmissionInput struct {
+	Token       string
+	OfProblemID uint64
+	Content     string
+	Language    string
+}
+
+type Submission struct {
+	ID          uint64
+	AuthorID    uint64
+	OfProblemID uint64
+	Content     string
+	Language    string
+	Status      ojs.SubmissionStatus
+	Result      ojs.SubmissionResult
+}
+
+type CreateSubmissionOutput struct {
+	Submission Submission
+}
+
+type GetSubmissionInput struct {
+	ID uint64
+}
+
+type GetSubmissionOutput struct {
+	Submission Submission
+}
+
+type GetSubmissionListInput struct {
+	Offset uint64
+	Limit  uint64
+}
+
+type GetSubmissionListOutput struct {
+	Submissions           []Submission
+	TotalSubmissionsCount uint64
+}
+
+type GetAccountProblemSubmissionListInput struct {
+	Token       string
+	OfProblemID uint64
+	Offset      uint64
+	Limit       uint64
+}
+
+type GetAccountProblemSubmissionListOutput struct {
+	Submissions           []Submission
+	TotalSubmissionsCount uint64
+}
+
+type GetProblemSubmissionListInput struct {
+	Token       string
+	OfProblemID uint64
+	Offset      uint64
+	Limit       uint64
+	IsHidden    bool
+}
+
+type GetProblemSubmissionListOutput struct {
+	Submissions           []Submission
+	TotalSubmissionsCount uint64
+}

@@ -50,6 +50,7 @@ func (h *Handler) CreateProblem(ctx context.Context, in *ojs.CreateProblemReques
 		Problem: &ojs.Problem{
 			Id:          resp.Problem.ID,
 			AuthorId:    resp.Problem.AuthorId,
+			AuthorName:  resp.Problem.AuthorName,
 			DisplayName: resp.Problem.DisplayName,
 			Description: resp.Problem.Description,
 			TimeLimit:   resp.Problem.TimeLimit,
@@ -388,28 +389,175 @@ func (h *Handler) UpdateTestCase(ctx context.Context, in *ojs.UpdateTestCaseRequ
 }
 
 // CreateSubmission implements ojs.OjsServiceServer.
-func (h *Handler) CreateSubmission(context.Context, *ojs.CreateSubmissionRequest) (*ojs.CreateSubmissionResponse, error) {
-	panic("unimplemented")
+func (h *Handler) CreateSubmission(ctx context.Context, in *ojs.CreateSubmissionRequest) (*ojs.CreateSubmissionResponse, error) {
+	// Call the corresponding method of h.submissionLogic
+	output, err := h.problemLogic.CreateSubmission(
+		ctx,
+		logic.CreateSubmissionInput{
+			Token:       h.getAuthTokenFromMetadata(ctx),
+			OfProblemID: in.GetOfProblemId(),
+			Content:     in.GetContent(),
+			Language:    in.GetLanguage(),
+		},
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	// Format the response based on the result obtained
+	response := &ojs.CreateSubmissionResponse{
+		Submission: &ojs.Submission{
+			Id:          output.Submission.ID,
+			OfProblemId: output.Submission.OfProblemID,
+			AuthorId:    output.Submission.AuthorID,
+			Content:     output.Submission.Content,
+			Language:    output.Submission.Language,
+			Status:      output.Submission.Status,
+			Result:      output.Submission.Result,
+		},
+	}
+
+	return response, nil
 }
 
 // GetProblemSubmissionList implements ojs.OjsServiceServer.
-func (h *Handler) GetProblemSubmissionList(context.Context, *ojs.GetProblemSubmissionListRequest) (*ojs.GetProblemSubmissionListResponse, error) {
-	panic("unimplemented")
+func (h *Handler) GetProblemSubmissionList(ctx context.Context, in *ojs.GetProblemSubmissionListRequest) (*ojs.GetProblemSubmissionListResponse, error) {
+	// Call the corresponding method of h.submissionLogic
+	output, err := h.problemLogic.GetProblemSubmissionList(
+		ctx,
+		logic.GetProblemSubmissionListInput{
+			OfProblemID: in.GetId(),
+			Offset:      in.GetOffset(),
+			Limit:       in.GetLimit(),
+		},
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	// Format the response based on the result obtained
+	var submissions []*ojs.Submission
+	for _, submission := range output.Submissions {
+		submissions = append(submissions, &ojs.Submission{
+			Id:          submission.ID,
+			AuthorId:    submission.AuthorID,
+			OfProblemId: submission.OfProblemID,
+			Content:     submission.Content,
+			Language:    submission.Language,
+			Status:      submission.Status,
+			Result:      submission.Result,
+		})
+	}
+
+	response := &ojs.GetProblemSubmissionListResponse{
+		Submissions:           submissions,
+		TotalSubmissionsCount: output.TotalSubmissionsCount,
+	}
+
+	return response, nil
 }
 
 // GetSubmission implements ojs.OjsServiceServer.
-func (h *Handler) GetSubmission(context.Context, *ojs.GetSubmissionRequest) (*ojs.GetSubmissionResponse, error) {
-	panic("unimplemented")
+func (h *Handler) GetSubmission(ctx context.Context, in *ojs.GetSubmissionRequest) (*ojs.GetSubmissionResponse, error) {
+	// Call the corresponding method of h.submissionLogic
+	output, err := h.problemLogic.GetSubmission(
+		ctx,
+		logic.GetSubmissionInput{
+			ID: in.GetId(),
+		},
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	// Format the response based on the result obtained
+	response := &ojs.GetSubmissionResponse{
+		Submission: &ojs.Submission{
+			Id:          output.Submission.ID,
+			AuthorId:    output.Submission.AuthorID,
+			OfProblemId: output.Submission.OfProblemID,
+			Content:     output.Submission.Content,
+			Language:    output.Submission.Language,
+			Status:      output.Submission.Status,
+			Result:      output.Submission.Result,
+		},
+	}
+
+	return response, nil
 }
 
 // GetSubmissionList implements ojs.OjsServiceServer.
-func (h *Handler) GetSubmissionList(context.Context, *ojs.GetSubmissionListRequest) (*ojs.GetSubmissionListResponse, error) {
-	panic("unimplemented")
+func (h *Handler) GetSubmissionList(ctx context.Context, in *ojs.GetSubmissionListRequest) (*ojs.GetSubmissionListResponse, error) {
+	// Call the corresponding method of h.submissionLogic
+	output, err := h.problemLogic.GetSubmissionList(
+		ctx,
+		logic.GetSubmissionListInput{
+			Offset: in.GetOffset(),
+			Limit:  in.GetLimit(),
+		},
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	// Format the response based on the result obtained
+	var submissions []*ojs.Submission
+	for _, submission := range output.Submissions {
+		submissions = append(submissions, &ojs.Submission{
+			Id:          submission.ID,
+			AuthorId:    submission.AuthorID,
+			OfProblemId: submission.OfProblemID,
+			Content:     submission.Content,
+			Language:    submission.Language,
+			Status:      submission.Status,
+			Result:      submission.Result,
+		})
+	}
+
+	response := &ojs.GetSubmissionListResponse{
+		Submissions:           submissions,
+		TotalSubmissionsCount: output.TotalSubmissionsCount,
+	}
+
+	return response, nil
 }
 
 // GetAccountProblemSubmissionList implements ojs.OjsServiceServer.
-func (h *Handler) GetAccountProblemSubmissionList(context.Context, *ojs.GetAccountProblemSubmissionListRequest) (*ojs.GetAccountProblemSubmissionListResponse, error) {
-	panic("unimplemented")
+func (h *Handler) GetAccountProblemSubmissionList(ctx context.Context, in *ojs.GetAccountProblemSubmissionListRequest) (*ojs.GetAccountProblemSubmissionListResponse, error) {
+	// Call the corresponding method of h.submissionLogic
+	output, err := h.problemLogic.GetAccountProblemSubmissionList(
+		ctx,
+		logic.GetAccountProblemSubmissionListInput{
+			Token:       h.getAuthTokenFromMetadata(ctx),
+			OfProblemID: in.GetProblemId(),
+			Offset:      in.GetOffset(),
+			Limit:       in.GetLimit(),
+		},
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	// Format the response based on the result obtained
+	var submissions []*ojs.Submission
+	for _, submission := range output.Submissions {
+		submissions = append(submissions, &ojs.Submission{
+			Id:          submission.ID,
+			AuthorId:    submission.AuthorID,
+			OfProblemId: submission.OfProblemID,
+			Content:     submission.Content,
+			Language:    submission.Language,
+			Status:      submission.Status,
+			Result:      submission.Result,
+		})
+	}
+
+	response := &ojs.GetAccountProblemSubmissionListResponse{
+		Submissions:           submissions,
+		TotalSubmissionsCount: output.TotalSubmissionsCount,
+	}
+
+	return response, nil
 }
 
 // GetServerInfo implements ojs.OjsServiceServer.

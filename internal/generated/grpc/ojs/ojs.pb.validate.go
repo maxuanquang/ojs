@@ -3896,8 +3896,6 @@ func (m *CreateSubmissionRequest) validate(all bool) error {
 
 	// no validation rules for OfProblemId
 
-	// no validation rules for AuthorId
-
 	// no validation rules for Content
 
 	// no validation rules for Language
