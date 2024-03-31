@@ -8,4 +8,7 @@ var WireSet = wire.NewSet(
 	NewTokenPublicKeyDataAccessor,
 	NewMigrator,
 	InitializeDB,
+	NewProblemDataAccessor,
+	NewSubmissionDataAccessor,
+	NewTestCaseDataAccessor,
 )

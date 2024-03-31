@@ -898,7 +898,7 @@
     "ojsGetProblemListResponse": {
       "type": "object",
       "properties": {
-        "problem": {
+        "problems": {
           "type": "array",
           "items": {
             "type": "object",

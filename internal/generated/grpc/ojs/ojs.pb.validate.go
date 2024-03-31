@@ -1792,7 +1792,7 @@ func (m *GetProblemListResponse) validate(all bool) error {
 
 	var errors []error
 
-	for idx, item := range m.GetProblem() {
+	for idx, item := range m.GetProblems() {
 		_, _ = idx, item
 
 		if all {
@@ -1800,7 +1800,7 @@ func (m *GetProblemListResponse) validate(all bool) error {
 			case interface{ ValidateAll() error }:
 				if err := v.ValidateAll(); err != nil {
 					errors = append(errors, GetProblemListResponseValidationError{
-						field:  fmt.Sprintf("Problem[%v]", idx),
+						field:  fmt.Sprintf("Problems[%v]", idx),
 						reason: "embedded message failed validation",
 						cause:  err,
 					})
@@ -1808,7 +1808,7 @@ func (m *GetProblemListResponse) validate(all bool) error {
 			case interface{ Validate() error }:
 				if err := v.Validate(); err != nil {
 					errors = append(errors, GetProblemListResponseValidationError{
-						field:  fmt.Sprintf("Problem[%v]", idx),
+						field:  fmt.Sprintf("Problems[%v]", idx),
 						reason: "embedded message failed validation",
 						cause:  err,
 					})
@@ -1817,7 +1817,7 @@ func (m *GetProblemListResponse) validate(all bool) error {
 		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
 			if err := v.Validate(); err != nil {
 				return GetProblemListResponseValidationError{
-					field:  fmt.Sprintf("Problem[%v]", idx),
+					field:  fmt.Sprintf("Problems[%v]", idx),
 					reason: "embedded message failed validation",
 					cause:  err,
 				}
@@ -2167,21 +2167,13 @@ func (m *UpdateProblemRequest) validate(all bool) error {
 
 	// no validation rules for Id
 
-	if m.DisplayName != nil {
-		// no validation rules for DisplayName
-	}
+	// no validation rules for DisplayName
 
-	if m.Description != nil {
-		// no validation rules for Description
-	}
+	// no validation rules for Description
 
-	if m.TimeLimit != nil {
-		// no validation rules for TimeLimit
-	}
+	// no validation rules for TimeLimit
 
-	if m.MemoryLimit != nil {
-		// no validation rules for MemoryLimit
-	}
+	// no validation rules for MemoryLimit
 
 	if len(errors) > 0 {
 		return UpdateProblemRequestMultiError(errors)
@@ -3457,17 +3449,11 @@ func (m *UpdateTestCaseRequest) validate(all bool) error {
 
 	// no validation rules for Id
 
-	if m.Input != nil {
-		// no validation rules for Input
-	}
+	// no validation rules for Input
 
-	if m.Output != nil {
-		// no validation rules for Output
-	}
+	// no validation rules for Output
 
-	if m.IsHidden != nil {
-		// no validation rules for IsHidden
-	}
+	// no validation rules for IsHidden
 
 	if len(errors) > 0 {
 		return UpdateTestCaseRequestMultiError(errors)

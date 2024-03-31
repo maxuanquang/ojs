@@ -41,14 +41,14 @@ func InitializeAppServer(configFilePath configs.ConfigFilePath) (app.Server, fun
 	}
 	accountDataAccessor := database.NewAccountDataAccessor(databaseDatabase, logger)
 	accountPasswordDataAccessor := database.NewAccountPasswordDataAccessor(databaseDatabase, logger)
-	hashLogic := logic.NewHashLogic()
+	auth := config.Auth
+	hashLogic := logic.NewHashLogic(auth)
 	tokenPublicKeyDataAccessor, err := database.NewTokenPublicKeyDataAccessor(databaseDatabase, logger)
 	if err != nil {
 		cleanup2()
 		cleanup()
 		return app.Server{}, nil, err
 	}
-	auth := config.Auth
 	configsCache := config.Cache
 	client, err := cache.NewClient(configsCache, logger)
 	if err != nil {
@@ -75,7 +75,11 @@ func InitializeAppServer(configFilePath configs.ConfigFilePath) (app.Server, fun
 		return app.Server{}, nil, err
 	}
 	accountLogic := logic.NewAccountLogic(databaseDatabase, accountDataAccessor, accountPasswordDataAccessor, hashLogic, tokenLogic, takenAccountName, logger)
-	ojsServiceServer := grpc.NewHandler(accountLogic)
+	problemDataAccessor := database.NewProblemDataAccessor(databaseDatabase, logger)
+	submissionDataAccessor := database.NewSubmissionDataAccessor(databaseDatabase, logger)
+	testCaseDataAccessor := database.NewTestCaseDataAccessor(databaseDatabase, logger)
+	problemLogic := logic.NewProblemLogic(logger, accountDataAccessor, problemDataAccessor, submissionDataAccessor, testCaseDataAccessor, tokenLogic)
+	ojsServiceServer := grpc.NewHandler(accountLogic, problemLogic)
 	server := grpc.NewServer(configsGRPC, ojsServiceServer)
 	configsHTTP := config.HTTP
 	httpServer := http.NewServer(configsHTTP, configsGRPC, auth, logger)

@@ -28,6 +28,16 @@ type CreateAccountOutput struct {
 	Role ojs.Role
 }
 
+type GetAccountInput struct {
+	ID uint64
+}
+
+type GetAccountOutput struct {
+	ID   uint64
+	Name string
+	Role ojs.Role
+}
+
 type CreateSessionInput struct {
 	Name     string
 	Password string
@@ -47,6 +57,7 @@ type DeleteSessionInput struct {
 
 type AccountLogic interface {
 	CreateAccount(ctx context.Context, in CreateAccountInput) (CreateAccountOutput, error)
+	GetAccount(ctx context.Context, in GetAccountInput) (GetAccountOutput, error)
 	CreateSession(ctx context.Context, in CreateSessionInput) (CreateSessionOutput, error)
 	DeleteSession(ctx context.Context, in DeleteSessionInput) error
 }
@@ -79,6 +90,25 @@ type accountLogic struct {
 	tokenLogic            TokenLogic
 	takenAccountNameCache cache.TakenAccountName
 	logger                *zap.Logger
+}
+
+func (a *accountLogic) GetAccount(ctx context.Context, in GetAccountInput) (GetAccountOutput, error) {
+	logger := utils.LoggerWithContext(ctx, a.logger).With(zap.Any("get_account_input", in))
+
+	account, err := a.accountDataAccessor.GetAccountByID(ctx, in.ID)
+	if err != nil {
+		logger.Error("failed to get account", zap.Error(err))
+		return GetAccountOutput{}, status.Error(codes.Internal, "failed to get account")
+	}
+	if account.ID == 0 {
+		return GetAccountOutput{}, status.Error(codes.NotFound, "account not found")
+	}
+
+	return GetAccountOutput{
+		ID:   account.ID,
+		Name: account.Name,
+		Role: ojs.Role(account.Role),
+	}, nil
 }
 
 // CreateAccount implements Account.
@@ -166,7 +196,7 @@ func (a *accountLogic) CreateSession(ctx context.Context, in CreateSessionInput)
 		return CreateSessionOutput{}, status.Error(codes.NotFound, "wrong account name or password")
 	}
 
-	stringToken, expiresAt, err := a.tokenLogic.CreateTokenString(ctx, foundAccount.ID)
+	stringToken, expiresAt, err := a.tokenLogic.CreateTokenString(ctx, foundAccount.ID, foundAccount.Name, foundAccount.Role)
 	if err != nil {
 		logger.Error("failed to create token", zap.Error(err))
 		return CreateSessionOutput{}, status.Error(codes.Internal, "failed to create token")
@@ -185,7 +215,7 @@ func (a *accountLogic) CreateSession(ctx context.Context, in CreateSessionInput)
 func (a *accountLogic) DeleteSession(ctx context.Context, in DeleteSessionInput) error {
 	logger := utils.LoggerWithContext(ctx, a.logger).With(zap.Any("delete_session_input", in))
 
-	_, _, err := a.tokenLogic.GetAccountIDAndExpireTime(ctx, in.Token)
+	_, _, _, _, err := a.tokenLogic.VerifyTokenString(ctx, in.Token)
 	if err != nil {
 		logger.With(zap.Error(err)).Error("failed to find account from token")
 		return status.Error(codes.NotFound, "account not found")

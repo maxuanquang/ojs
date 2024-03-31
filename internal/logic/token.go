@@ -19,8 +19,8 @@ import (
 )
 
 type TokenLogic interface {
-	CreateTokenString(ctx context.Context, accountID uint64) (string, time.Time, error)
-	GetAccountIDAndExpireTime(ctx context.Context, token string) (uint64, time.Time, error)
+	CreateTokenString(ctx context.Context, accountID uint64, accountName string, accountRole int8) (string, time.Time, error)
+	VerifyTokenString(ctx context.Context, token string) (accountId uint64, accountName string, accountRole int8, expiresAt time.Time, err error)
 	WithDatabase(database database.Database) TokenLogic
 }
 
@@ -79,8 +79,8 @@ type tokenLogic struct {
 	tokenPublicKeyCache        cache.TokenPublicKey
 }
 
-// GetAccountIDAndExpireTime implements Token.
-func (t *tokenLogic) GetAccountIDAndExpireTime(ctx context.Context, tokenString string) (uint64, time.Time, error) {
+// VerifyTokenString implements Token.
+func (t *tokenLogic) VerifyTokenString(ctx context.Context, tokenString string) (uint64, string, int8, time.Time, error) {
 	logger := utils.LoggerWithContext(ctx, t.logger)
 
 	keyFunc := func(parsedToken *jwt.Token) (interface{}, error) {
@@ -112,45 +112,59 @@ func (t *tokenLogic) GetAccountIDAndExpireTime(ctx context.Context, tokenString 
 	parsedToken, err := jwt.Parse(tokenString, keyFunc)
 	if err != nil {
 		logger.Error("cannot parse token", zap.Error(err))
-		return 0, time.Time{}, err
+		return 0, "", 0, time.Time{}, err
 	}
 
 	if !parsedToken.Valid {
 		logger.Error("invalid token")
-		return 0, time.Time{}, errors.New("invalid token")
+		return 0, "", 0, time.Time{}, errors.New("invalid token")
 	}
 
 	claims, ok := parsedToken.Claims.(jwt.MapClaims)
 	if !ok {
 		logger.Error("cannot get token's claims")
-		return 0, time.Time{}, errors.New("cannot get token's claims")
+		return 0, "", 0, time.Time{}, errors.New("cannot get token's claims")
 	}
 
 	accountID, ok := claims["sub"].(float64)
 	if !ok {
 		logger.Error("cannot get token's sub claim")
-		return 0, time.Time{}, errors.New("cannot get token's sub claim")
+		return 0, "", 0, time.Time{}, errors.New("cannot get token's sub claim")
+	}
+
+	accountName, ok := claims["name"].(string)
+	if !ok {
+		logger.Error("cannot get token's name claim")
+		return 0, "", 0, time.Time{}, errors.New("cannot get token's name claim")
+	}
+
+	accountRole, ok := claims["role"].(float64)
+	if !ok {
+		logger.Error("cannot get token's role claim")
+		return 0, "", 0, time.Time{}, errors.New("cannot get token's role claim")
 	}
 
 	expiresAtUnix, ok := claims["exp"].(float64)
 	if !ok {
 		logger.Error("cannot get token's exp claim")
-		return 0, time.Time{}, errors.New("cannot get token's exp claim")
+		return 0, "", 0, time.Time{}, errors.New("cannot get token's exp claim")
 	}
 
-	return uint64(accountID), time.Unix(int64(expiresAtUnix), 0), nil
+	return uint64(accountID), accountName, int8(accountRole), time.Unix(int64(expiresAtUnix), 0), nil
 
 }
 
 // CreateTokenString implements Token.
-func (t *tokenLogic) CreateTokenString(ctx context.Context, accountID uint64) (string, time.Time, error) {
+func (t *tokenLogic) CreateTokenString(ctx context.Context, accountID uint64, accountName string, accountRole int8) (string, time.Time, error) {
 	logger := utils.LoggerWithContext(ctx, t.logger)
 
 	expiresAt := time.Now().Add(t.authConfig.Token.GetTokenDuration())
 	token := jwt.NewWithClaims(jwt.SigningMethodRS512, jwt.MapClaims{
-		"sub": accountID,
-		"exp": expiresAt.Unix(),
-		"kid": t.tokenPublicKeyID,
+		"sub":  accountID,
+		"name": accountName,
+		"role": accountRole,
+		"exp":  expiresAt.Unix(),
+		"kid":  t.tokenPublicKeyID,
 	})
 
 	tokenString, err := token.SignedString(t.tokenPrivateKeyValue)

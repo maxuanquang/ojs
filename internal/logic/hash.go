@@ -18,8 +18,10 @@ type hashLogic struct {
 	authConfig configs.Auth
 }
 
-func NewHashLogic() HashLogic {
-	return &hashLogic{}
+func NewHashLogic(authConfig configs.Auth) HashLogic {
+	return &hashLogic{
+		authConfig: authConfig,
+	}
 }
 
 // HashPassword implements Hash.

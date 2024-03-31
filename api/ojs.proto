@@ -185,17 +185,17 @@ message GetProblemListRequest {
     uint64 limit = 2 [ (validate.rules).uint64 = {lte : 100} ];
 }
 message GetProblemListResponse {
-    repeated Problem problem = 1;
+    repeated Problem problems = 1;
     uint64 total_problem_count = 2;
 }
 message GetProblemRequest { uint64 id = 1; }
 message GetProblemResponse { Problem problem = 1; }
 message UpdateProblemRequest {
     uint64 id = 1;
-    optional string display_name = 2;
-    optional string description = 3;
-    optional uint64 time_limit = 4;
-    optional uint64 memory_limit = 5;
+    string display_name = 2;
+    string description = 3;
+    uint64 time_limit = 4;
+    uint64 memory_limit = 5;
 }
 message UpdateProblemResponse { Problem problem = 1; }
 message DeleteProblemRequest { uint64 id = 1; }
@@ -228,9 +228,9 @@ message GetTestCaseRequest { uint64 id = 1; }
 message GetTestCaseResponse { TestCase test_case = 1; }
 message UpdateTestCaseRequest {
     uint64 id = 1;
-    optional string input = 2;
-    optional string output = 3;
-    optional bool is_hidden = 4;
+    string input = 2;
+    string output = 3;
+    bool is_hidden = 4;
 }
 message UpdateTestCaseResponse { TestCase test_case = 1; }
 message DeleteTestCaseRequest { uint64 id = 1; }
