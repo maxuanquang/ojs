@@ -17,17 +17,20 @@ const (
 func NewHandler(
 	accountLogic logic.AccountLogic,
 	problemLogic logic.ProblemLogic,
+	submissionLogic logic.SubmissionLogic,
 ) ojs.OjsServiceServer {
 	return &Handler{
-		accountLogic: accountLogic,
-		problemLogic: problemLogic,
+		accountLogic:    accountLogic,
+		problemLogic:    problemLogic,
+		submissionLogic: submissionLogic,
 	}
 }
 
 type Handler struct {
 	ojs.UnimplementedOjsServiceServer
-	accountLogic logic.AccountLogic
-	problemLogic logic.ProblemLogic
+	accountLogic    logic.AccountLogic
+	problemLogic    logic.ProblemLogic
+	submissionLogic logic.SubmissionLogic
 }
 
 // CreateProblem implements ojs.OjsServiceServer.
@@ -391,7 +394,7 @@ func (h *Handler) UpdateTestCase(ctx context.Context, in *ojs.UpdateTestCaseRequ
 // CreateSubmission implements ojs.OjsServiceServer.
 func (h *Handler) CreateSubmission(ctx context.Context, in *ojs.CreateSubmissionRequest) (*ojs.CreateSubmissionResponse, error) {
 	// Call the corresponding method of h.submissionLogic
-	output, err := h.problemLogic.CreateSubmission(
+	output, err := h.submissionLogic.CreateSubmission(
 		ctx,
 		logic.CreateSubmissionInput{
 			Token:       h.getAuthTokenFromMetadata(ctx),
@@ -423,7 +426,7 @@ func (h *Handler) CreateSubmission(ctx context.Context, in *ojs.CreateSubmission
 // GetProblemSubmissionList implements ojs.OjsServiceServer.
 func (h *Handler) GetProblemSubmissionList(ctx context.Context, in *ojs.GetProblemSubmissionListRequest) (*ojs.GetProblemSubmissionListResponse, error) {
 	// Call the corresponding method of h.submissionLogic
-	output, err := h.problemLogic.GetProblemSubmissionList(
+	output, err := h.submissionLogic.GetProblemSubmissionList(
 		ctx,
 		logic.GetProblemSubmissionListInput{
 			OfProblemID: in.GetId(),
@@ -460,7 +463,7 @@ func (h *Handler) GetProblemSubmissionList(ctx context.Context, in *ojs.GetProbl
 // GetSubmission implements ojs.OjsServiceServer.
 func (h *Handler) GetSubmission(ctx context.Context, in *ojs.GetSubmissionRequest) (*ojs.GetSubmissionResponse, error) {
 	// Call the corresponding method of h.submissionLogic
-	output, err := h.problemLogic.GetSubmission(
+	output, err := h.submissionLogic.GetSubmission(
 		ctx,
 		logic.GetSubmissionInput{
 			ID: in.GetId(),
@@ -489,7 +492,7 @@ func (h *Handler) GetSubmission(ctx context.Context, in *ojs.GetSubmissionReques
 // GetSubmissionList implements ojs.OjsServiceServer.
 func (h *Handler) GetSubmissionList(ctx context.Context, in *ojs.GetSubmissionListRequest) (*ojs.GetSubmissionListResponse, error) {
 	// Call the corresponding method of h.submissionLogic
-	output, err := h.problemLogic.GetSubmissionList(
+	output, err := h.submissionLogic.GetSubmissionList(
 		ctx,
 		logic.GetSubmissionListInput{
 			Offset: in.GetOffset(),
@@ -525,7 +528,7 @@ func (h *Handler) GetSubmissionList(ctx context.Context, in *ojs.GetSubmissionLi
 // GetAccountProblemSubmissionList implements ojs.OjsServiceServer.
 func (h *Handler) GetAccountProblemSubmissionList(ctx context.Context, in *ojs.GetAccountProblemSubmissionListRequest) (*ojs.GetAccountProblemSubmissionListResponse, error) {
 	// Call the corresponding method of h.submissionLogic
-	output, err := h.problemLogic.GetAccountProblemSubmissionList(
+	output, err := h.submissionLogic.GetAccountProblemSubmissionList(
 		ctx,
 		logic.GetAccountProblemSubmissionListInput{
 			Token:       h.getAuthTokenFromMetadata(ctx),

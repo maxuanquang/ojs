@@ -13,7 +13,10 @@ import (
 	"github.com/maxuanquang/ojs/internal/dataaccess"
 	"github.com/maxuanquang/ojs/internal/dataaccess/cache"
 	"github.com/maxuanquang/ojs/internal/dataaccess/database"
+	consumer2 "github.com/maxuanquang/ojs/internal/dataaccess/mq/consumer"
+	"github.com/maxuanquang/ojs/internal/dataaccess/mq/producer"
 	"github.com/maxuanquang/ojs/internal/handler"
+	"github.com/maxuanquang/ojs/internal/handler/consumer"
 	"github.com/maxuanquang/ojs/internal/handler/grpc"
 	"github.com/maxuanquang/ojs/internal/handler/http"
 	"github.com/maxuanquang/ojs/internal/logic"
@@ -79,11 +82,38 @@ func InitializeAppServer(configFilePath configs.ConfigFilePath) (app.Server, fun
 	submissionDataAccessor := database.NewSubmissionDataAccessor(databaseDatabase, logger)
 	testCaseDataAccessor := database.NewTestCaseDataAccessor(databaseDatabase, logger)
 	problemLogic := logic.NewProblemLogic(logger, accountDataAccessor, problemDataAccessor, submissionDataAccessor, testCaseDataAccessor, tokenLogic)
-	ojsServiceServer := grpc.NewHandler(accountLogic, problemLogic)
+	mq := config.MQ
+	producerClient, err := producer.NewClient(mq, logger)
+	if err != nil {
+		cleanup2()
+		cleanup()
+		return app.Server{}, nil, err
+	}
+	submissionCreatedProducer, err := producer.NewSubmissionCreatedProducer(producerClient, logger)
+	if err != nil {
+		cleanup2()
+		cleanup()
+		return app.Server{}, nil, err
+	}
+	submissionLogic := logic.NewSubmissionLogic(logger, accountDataAccessor, problemDataAccessor, submissionDataAccessor, testCaseDataAccessor, tokenLogic, submissionCreatedProducer, databaseDatabase)
+	ojsServiceServer := grpc.NewHandler(accountLogic, problemLogic, submissionLogic)
 	server := grpc.NewServer(configsGRPC, ojsServiceServer)
 	configsHTTP := config.HTTP
 	httpServer := http.NewServer(configsHTTP, configsGRPC, auth, logger)
-	appServer, err := app.NewServer(server, httpServer, logger)
+	submissionCreatedHandler, err := consumer.NewSubmissionCreatedHandler(submissionLogic, logger)
+	if err != nil {
+		cleanup2()
+		cleanup()
+		return app.Server{}, nil, err
+	}
+	consumerConsumer, err := consumer2.NewConsumer(mq, logger)
+	if err != nil {
+		cleanup2()
+		cleanup()
+		return app.Server{}, nil, err
+	}
+	rootConsumer := consumer.NewRootConsumer(submissionCreatedHandler, consumerConsumer, logger)
+	appServer, err := app.NewServer(server, httpServer, rootConsumer, logger)
 	if err != nil {
 		cleanup2()
 		cleanup()
