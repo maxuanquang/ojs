@@ -2,7 +2,7 @@ auth:
   hash:
     cost: 4
   token:
-    duration: 86400 # in seconds
+    duration: 24h
     rs512_key_pair_bit_size: 2048
 database:
   type: "mysql"
@@ -32,19 +32,22 @@ judge:
       name: C++
       compile:
         image: "docker.io/library/gcc:9.5.0-bullseye"
-        timeout_duration: 30s
-        memory_limit: 4GiB
-        cpu_quota: 4000000
-        command_template: ["g++"]
-        source_file_name: main.cpp
-        program_file_name: a.out
+        cpus: 0.5
+        memory: 4GiB
+        timeout: 30s
+        source_file_extension: ".cpp"
+        command_template: ["g++", "-o", "$PROGRAM", "$SOURCE"]
       execute:
-        image:
-        command_template:
-        cpu_quota:
+        image: "docker.io/library/debian:bullseye-slim"
+        cpus: 0.5
+        memory: 4GiB
+        timeout: 30s
+        command_template: #TODO: Define this
     - value: python
       name: Python 3
       execute:
         image: "docker.io/library/python:3.13-rc-slim"
-        command_template: ["python3"]
-        cpu_quota: 1000000
+        cpus: 0.5
+        memory: 4GiB
+        timeout: 30s
+        command_template: ["python3", "$SOURCE"]

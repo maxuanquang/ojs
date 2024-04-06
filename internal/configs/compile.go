@@ -7,17 +7,16 @@ import (
 )
 
 type Compile struct {
-	Image           string   `yaml:"image"`
-	TimeoutDuration string   `yaml:"timeout_duration"`
-	MemoryLimit     string   `yaml:"memory_limit"`
-	CPUQuota        int      `yaml:"cpu_quota"`
-	CommandTemplate []string `yaml:"command_template"`
-	SourceFileName  string   `yaml:"source_file_name"`
-	ProgramFileName string   `yaml:"program_file_name"`
+	Image               string   `yaml:"image"`
+	Timeout             string   `yaml:"timeout"`
+	Memory              string   `yaml:"memory"`
+	CPUs                float32  `yaml:"cpus"`
+	CommandTemplate     []string `yaml:"command_template"`
+	SourceFileExtension string   `yaml:"source_file_extension"`
 }
 
-func (c *Compile) GetTimeoutDuration() (time.Duration, error) {
-	timeout, err := time.ParseDuration(c.TimeoutDuration)
+func (c *Compile) GetTimeoutInTimeDuration() (time.Duration, error) {
+	timeout, err := time.ParseDuration(c.Timeout)
 	if err != nil {
 		return 0, err
 	}
@@ -25,8 +24,8 @@ func (c *Compile) GetTimeoutDuration() (time.Duration, error) {
 	return timeout, nil
 }
 
-func (c *Compile) GetMemoryLimitInBytes() (uint64, error) {
-	memoryLimit, err := humanize.ParseBytes(c.MemoryLimit)
+func (c *Compile) GetMemoryInBytes() (uint64, error) {
+	memoryLimit, err := humanize.ParseBytes(c.Memory)
 	if err != nil {
 		return 0, err
 	}

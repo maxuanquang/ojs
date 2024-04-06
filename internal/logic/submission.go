@@ -86,18 +86,17 @@ func (p *submissionLogic) CreateSubmission(ctx context.Context, in CreateSubmiss
 			return err
 		}
 
-		// Produce a message to the submission created queue
-		err = p.submissionCreatedProducer.Produce(ctx, createdSubmission.ID)
-		if err != nil {
-			p.logger.Error("failed to send message to submission created queue", zap.Error(err))
-			return err
-		}
-
 		return nil
 	})
 	if txErr != nil {
 		p.logger.Error("create submission transaction failed", zap.Error(err))
 		return CreateSubmissionOutput{}, err
+	}
+
+	// Produce a message to the submission created queue
+	err = p.submissionCreatedProducer.Produce(ctx, createdSubmission.ID)
+	if err != nil {
+		p.logger.Error("failed to send message to submission created queue", zap.Error(err))
 	}
 
 	return CreateSubmissionOutput{
