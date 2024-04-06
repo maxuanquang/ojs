@@ -8,115 +8,115 @@ option go_package = "grpc/ojs";
 service OjsService {
     rpc GetServerInfo(GetServerInfoRequest) returns (GetServerInfoResponse) {
         option (google.api.http) = {
-            get : "/v1/info"
+            get : "/api/v1/info"
         };
     }
 
     rpc CreateAccount(CreateAccountRequest) returns (CreateAccountResponse) {
         option (google.api.http) = {
-            post : "/v1/accounts",
+            post : "/api/v1/accounts",
             body : "*"
         };
     }
     rpc GetAccount(GetAccountRequest) returns (GetAccountResponse) {
         option (google.api.http) = {
-            get : "/v1/accounts/{id}",
+            get : "/api/v1/accounts/{id}",
         };
     }
 
     rpc CreateSession(CreateSessionRequest) returns (CreateSessionResponse) {
         option (google.api.http) = {
-            post : "/v1/sessions",
+            post : "/api/v1/sessions",
             body : "*"
         };
     }
     rpc DeleteSession(DeleteSessionRequest) returns (DeleteSessionResponse) {
         option (google.api.http) = {
-            delete : "/v1/sessions",
+            delete : "/api/v1/sessions",
         };
     }
 
     rpc CreateProblem(CreateProblemRequest) returns (CreateProblemResponse) {
         option (google.api.http) = {
-            post : "/v1/problems",
+            post : "/api/v1/problems",
             body : "*"
         };
     }
     rpc GetProblemList(GetProblemListRequest) returns (GetProblemListResponse) {
         option (google.api.http) = {
-            get : "/v1/problems",
+            get : "/api/v1/problems",
         };
     }
     rpc GetProblem(GetProblemRequest) returns (GetProblemResponse) {
         option (google.api.http) = {
-            get : "/v1/problems/{id}",
+            get : "/api/v1/problems/{id}",
         };
     }
     rpc UpdateProblem(UpdateProblemRequest) returns (UpdateProblemResponse) {
         option (google.api.http) = {
-            put : "/v1/problems/{id}",
+            put : "/api/v1/problems/{id}",
             body : "*"
         };
     }
     rpc DeleteProblem(DeleteProblemRequest) returns (DeleteProblemResponse) {
         option (google.api.http) = {
-            delete : "/v1/problems/{id}",
+            delete : "/api/v1/problems/{id}",
         };
     }
 
     rpc CreateTestCase(CreateTestCaseRequest) returns (CreateTestCaseResponse) {
         option (google.api.http) = {
-            post : "/v1/test-cases",
+            post : "/api/v1/test-cases",
             body : "*"
         };
     }
     rpc GetProblemTestCaseList(GetProblemTestCaseListRequest) returns (GetProblemTestCaseListResponse) {
         option (google.api.http) = {
-            get : "/v1/problems/{id}/test-cases",
+            get : "/api/v1/problems/{id}/test-cases",
         };
     }
     rpc GetTestCase(GetTestCaseRequest) returns (GetTestCaseResponse) {
         option (google.api.http) = {
-            get : "/v1/test-cases/{id}",
+            get : "/api/v1/test-cases/{id}",
         };
     }
     rpc UpdateTestCase(UpdateTestCaseRequest) returns (UpdateTestCaseResponse) {
         option (google.api.http) = {
-            put : "/v1/test-cases/{id}",
+            put : "/api/v1/test-cases/{id}",
             body : "*"
         };
     }
     rpc DeleteTestCase(DeleteTestCaseRequest) returns (DeleteTestCaseResponse) {
         option (google.api.http) = {
-            delete : "/v1/test-cases/{id}",
+            delete : "/api/v1/test-cases/{id}",
         };
     }
 
     rpc CreateSubmission(CreateSubmissionRequest) returns (CreateSubmissionResponse) {
         option (google.api.http) = {
-            post : "/v1/submissions",
+            post : "/api/v1/submissions",
             body : "*"
         };
     }
     rpc GetSubmission(GetSubmissionRequest) returns (GetSubmissionResponse) {
         option (google.api.http) = {
-            get : "/v1/submissions/{id}",
+            get : "/api/v1/submissions/{id}",
         };
     }
     rpc GetSubmissionList(GetSubmissionListRequest) returns (GetSubmissionListResponse) {
         option (google.api.http) = {
-            get : "/v1/submissions",
+            get : "/api/v1/submissions",
         };
     }
 
     rpc GetProblemSubmissionList(GetProblemSubmissionListRequest) returns (GetProblemSubmissionListResponse) {
         option (google.api.http) = {
-            get : "/v1/problems/{id}/submissions",
+            get : "/api/v1/problems/{id}/submissions",
         };
     }
     rpc GetAccountProblemSubmissionList(GetAccountProblemSubmissionListRequest) returns (GetAccountProblemSubmissionListResponse) {
         option (google.api.http) = {
-            get : "/v1/accounts/{account_id}/problems/{problem_id}/submissions",
+            get : "/api/v1/accounts/{account_id}/problems/{problem_id}/submissions",
         };
     }
 
@@ -132,14 +132,15 @@ enum Role {
     UndefinedRole = 0;
     Admin = 1;
     Contester = 2;
+    ProblemSetter = 3;
 }
 
 message CreateAccountRequest {
     string name = 1 [ (validate.rules).string = {
-        pattern : "^[a-zA-Z0-9]{6,32}$",
+        pattern : "^[a-zA-Z0-9]{3,32}$",
     } ];
     string password = 2 [ (validate.rules).string = {
-        pattern : "^[a-zA-Z0-9]{6,32}$",
+        pattern : "^[a-zA-Z0-9]{3,32}$",
     } ];
     Role role = 3;
 }
@@ -154,10 +155,10 @@ message GetAccountResponse { Account account = 1; }
 
 message CreateSessionRequest {
     string name = 1 [ (validate.rules).string = {
-        pattern : "^[a-zA-Z0-9]{6,32}$",
+        pattern : "^[a-zA-Z0-9]{3,32}$",
     } ];
     string password = 2 [ (validate.rules).string = {
-        pattern : "^[a-zA-Z0-9]{6,32}$",
+        pattern : "^[a-zA-Z0-9]{3,32}$",
     } ];
 }
 message CreateSessionResponse { Account account = 1; }
@@ -250,7 +251,7 @@ enum SubmissionStatus {
 enum SubmissionResult {
     UndefinedResult = 0;
     OK = 1;
-    ComplieError = 2;
+    CompileError = 2;
     RuntimeError = 3;
     TimeLimitExceeded = 4;
     MemoryLimitExceeded = 5;

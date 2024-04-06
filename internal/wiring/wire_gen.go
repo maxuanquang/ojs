@@ -25,7 +25,7 @@ import (
 
 // Injectors from wire.go:
 
-func InitializeAppServer(configFilePath configs.ConfigFilePath) (app.Server, func(), error) {
+func InitializeAppServer(configFilePath configs.ConfigFilePath, appArguments utils.Arguments) (app.Server, func(), error) {
 	config, err := configs.NewConfig(configFilePath)
 	if err != nil {
 		return app.Server{}, nil, err
@@ -82,6 +82,19 @@ func InitializeAppServer(configFilePath configs.ConfigFilePath) (app.Server, fun
 	submissionDataAccessor := database.NewSubmissionDataAccessor(databaseDatabase, logger)
 	testCaseDataAccessor := database.NewTestCaseDataAccessor(databaseDatabase, logger)
 	problemLogic := logic.NewProblemLogic(logger, accountDataAccessor, problemDataAccessor, submissionDataAccessor, testCaseDataAccessor, tokenLogic)
+	clientClient, err := utils.InitializeDockerClient()
+	if err != nil {
+		cleanup2()
+		cleanup()
+		return app.Server{}, nil, err
+	}
+	judge := config.Judge
+	judgeLogic, err := logic.NewJudgeLogic(problemDataAccessor, submissionDataAccessor, testCaseDataAccessor, clientClient, judge, appArguments, logger)
+	if err != nil {
+		cleanup2()
+		cleanup()
+		return app.Server{}, nil, err
+	}
 	mq := config.MQ
 	producerClient, err := producer.NewClient(mq, logger)
 	if err != nil {
@@ -95,8 +108,9 @@ func InitializeAppServer(configFilePath configs.ConfigFilePath) (app.Server, fun
 		cleanup()
 		return app.Server{}, nil, err
 	}
-	submissionLogic := logic.NewSubmissionLogic(logger, accountDataAccessor, problemDataAccessor, submissionDataAccessor, testCaseDataAccessor, tokenLogic, submissionCreatedProducer, databaseDatabase)
-	ojsServiceServer := grpc.NewHandler(accountLogic, problemLogic, submissionLogic)
+	submissionLogic := logic.NewSubmissionLogic(logger, accountDataAccessor, problemDataAccessor, submissionDataAccessor, testCaseDataAccessor, tokenLogic, judgeLogic, submissionCreatedProducer, databaseDatabase)
+	testCaseLogic := logic.NewTestCaseLogic(logger, accountDataAccessor, problemDataAccessor, submissionDataAccessor, testCaseDataAccessor, tokenLogic)
+	ojsServiceServer := grpc.NewHandler(accountLogic, problemLogic, submissionLogic, testCaseLogic)
 	server := grpc.NewServer(configsGRPC, ojsServiceServer)
 	configsHTTP := config.HTTP
 	httpServer := http.NewServer(configsHTTP, configsGRPC, auth, logger)

@@ -26,6 +26,7 @@ type TestCaseDataAccessor interface {
 	GetTestCaseByID(ctx context.Context, id uint64) (TestCase, error)
 	DeleteTestCase(ctx context.Context, id uint64) error
 	GetProblemTestCaseList(ctx context.Context, problemID uint64, offset uint64, limit uint64) ([]TestCase, error)
+	GetProblemTestCaseListAll(ctx context.Context, problemID uint64) ([]TestCase, error)
 	GetProblemTestCaseCount(ctx context.Context, problemID uint64) (uint64, error)
 	UpdateTestCase(ctx context.Context, testCase TestCase) (TestCase, error)
 	WithDatabaseTransaction(database Database) TestCaseDataAccessor
@@ -139,6 +140,19 @@ func (t *testCaseDataAccessor) UpdateTestCase(ctx context.Context, testCase Test
 func (t *testCaseDataAccessor) GetProblemTestCaseList(ctx context.Context, problemID uint64, offset uint64, limit uint64) ([]TestCase, error) {
 	var testCases []TestCase
 	result := t.database.Where("of_problem_id = ?", problemID).Offset(int(offset)).Limit(int(limit)).Find(&testCases)
+	if result.Error != nil {
+		logger := utils.LoggerWithContext(ctx, t.logger).With(zap.Uint64("problem_id", problemID))
+		logger.Error("error getting test cases of problem", zap.Error(result.Error))
+		return nil, result.Error
+	}
+
+	return testCases, nil
+}
+
+// GetProblemTestCaseListAll implements TestCaseDataAccessor.
+func (t *testCaseDataAccessor) GetProblemTestCaseListAll(ctx context.Context, problemID uint64) ([]TestCase, error) {
+	var testCases []TestCase
+	result := t.database.Where("of_problem_id = ?", problemID).Find(&testCases)
 	if result.Error != nil {
 		logger := utils.LoggerWithContext(ctx, t.logger).With(zap.Uint64("problem_id", problemID))
 		logger.Error("error getting test cases of problem", zap.Error(result.Error))

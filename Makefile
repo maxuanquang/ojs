@@ -21,7 +21,7 @@ proto:
 	--go_out=./internal/generated \
 	--go-grpc_out=./internal/generated \
 	--validate_out="lang=go:./internal/generated" \
-	--openapiv2_out=./api \
+	--openapiv2_out=./api/v1 \
 	--grpc-gateway_out ./internal/generated --grpc-gateway_opt generate_unbound_methods=true \
 	--experimental_allow_proto3_optional \
 	api/ojs.proto

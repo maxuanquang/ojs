@@ -264,7 +264,7 @@ func (m *CreateAccountRequest) validate(all bool) error {
 	if !_CreateAccountRequest_Name_Pattern.MatchString(m.GetName()) {
 		err := CreateAccountRequestValidationError{
 			field:  "Name",
-			reason: "value does not match regex pattern \"^[a-zA-Z0-9]{6,32}$\"",
+			reason: "value does not match regex pattern \"^[a-zA-Z0-9]{3,32}$\"",
 		}
 		if !all {
 			return err
@@ -275,7 +275,7 @@ func (m *CreateAccountRequest) validate(all bool) error {
 	if !_CreateAccountRequest_Password_Pattern.MatchString(m.GetPassword()) {
 		err := CreateAccountRequestValidationError{
 			field:  "Password",
-			reason: "value does not match regex pattern \"^[a-zA-Z0-9]{6,32}$\"",
+			reason: "value does not match regex pattern \"^[a-zA-Z0-9]{3,32}$\"",
 		}
 		if !all {
 			return err
@@ -365,9 +365,9 @@ var _ interface {
 	ErrorName() string
 } = CreateAccountRequestValidationError{}
 
-var _CreateAccountRequest_Name_Pattern = regexp.MustCompile("^[a-zA-Z0-9]{6,32}$")
+var _CreateAccountRequest_Name_Pattern = regexp.MustCompile("^[a-zA-Z0-9]{3,32}$")
 
-var _CreateAccountRequest_Password_Pattern = regexp.MustCompile("^[a-zA-Z0-9]{6,32}$")
+var _CreateAccountRequest_Password_Pattern = regexp.MustCompile("^[a-zA-Z0-9]{3,32}$")
 
 // Validate checks the field values on Account with the rules defined in the
 // proto definition for this message. If any rules are violated, the first
@@ -864,7 +864,7 @@ func (m *CreateSessionRequest) validate(all bool) error {
 	if !_CreateSessionRequest_Name_Pattern.MatchString(m.GetName()) {
 		err := CreateSessionRequestValidationError{
 			field:  "Name",
-			reason: "value does not match regex pattern \"^[a-zA-Z0-9]{6,32}$\"",
+			reason: "value does not match regex pattern \"^[a-zA-Z0-9]{3,32}$\"",
 		}
 		if !all {
 			return err
@@ -875,7 +875,7 @@ func (m *CreateSessionRequest) validate(all bool) error {
 	if !_CreateSessionRequest_Password_Pattern.MatchString(m.GetPassword()) {
 		err := CreateSessionRequestValidationError{
 			field:  "Password",
-			reason: "value does not match regex pattern \"^[a-zA-Z0-9]{6,32}$\"",
+			reason: "value does not match regex pattern \"^[a-zA-Z0-9]{3,32}$\"",
 		}
 		if !all {
 			return err
@@ -963,9 +963,9 @@ var _ interface {
 	ErrorName() string
 } = CreateSessionRequestValidationError{}
 
-var _CreateSessionRequest_Name_Pattern = regexp.MustCompile("^[a-zA-Z0-9]{6,32}$")
+var _CreateSessionRequest_Name_Pattern = regexp.MustCompile("^[a-zA-Z0-9]{3,32}$")
 
-var _CreateSessionRequest_Password_Pattern = regexp.MustCompile("^[a-zA-Z0-9]{6,32}$")
+var _CreateSessionRequest_Password_Pattern = regexp.MustCompile("^[a-zA-Z0-9]{3,32}$")
 
 // Validate checks the field values on CreateSessionResponse with the rules
 // defined in the proto definition for this message. If any rules are

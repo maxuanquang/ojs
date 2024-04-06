@@ -151,14 +151,29 @@ func (s *submissionDataAccessor) GetAccountProblemSubmissionCount(ctx context.Co
 
 // UpdateSubmission implements SubmissionDataAccessor.
 func (s *submissionDataAccessor) UpdateSubmission(ctx context.Context, submission Submission) (Submission, error) {
-	result := s.database.Save(&submission)
+	logger := utils.LoggerWithContext(ctx, s.logger).With(zap.Any("submission", submission))
+
+	foundSubmission, err := s.GetSubmissionByID(ctx, submission.ID)
+	if err != nil {
+		logger.With(zap.Error(err)).Error("error getting submission")
+		return Submission{}, err
+	}
+
+	// just update status and result
+	if submission.Status != 0 {
+		foundSubmission.Status = submission.Status
+	}
+	if submission.Result != 0 {
+		foundSubmission.Result = submission.Result
+	}
+
+	result := s.database.Save(&foundSubmission)
 	if result.Error != nil {
-		logger := utils.LoggerWithContext(ctx, s.logger).With(zap.Any("submission", submission))
 		logger.Error("error updating submission", zap.Error(result.Error))
 		return Submission{}, result.Error
 	}
 
-	return submission, nil
+	return foundSubmission, nil
 }
 
 // DeleteSubmission implements SubmissionDataAccessor.

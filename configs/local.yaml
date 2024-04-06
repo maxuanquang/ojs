@@ -1,6 +1,6 @@
 auth:
   hash:
-    cost: 16
+    cost: 4
   token:
     duration: 86400 # in seconds
     rs512_key_pair_bit_size: 2048
@@ -26,3 +26,25 @@ http:
 mq:
   addresses: ["0.0.0.0:9092"]
   client_id: "1"
+judge:
+  languages:
+    - value: cpp
+      name: C++
+      compile:
+        image: "docker.io/library/gcc:9.5.0-bullseye"
+        timeout_duration: 30s
+        memory_limit: 4GiB
+        cpu_quota: 4000000
+        command_template: ["g++"]
+        source_file_name: main.cpp
+        program_file_name: a.out
+      execute:
+        image:
+        command_template:
+        cpu_quota:
+    - value: python
+      name: Python 3
+      execute:
+        image: "docker.io/library/python:3.13-rc-slim"
+        command_template: ["python3"]
+        cpu_quota: 1000000

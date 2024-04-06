@@ -997,7 +997,7 @@ func RegisterOjsServiceHandlerServer(ctx context.Context, mux *runtime.ServeMux,
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/ojs.OjsService/GetServerInfo", runtime.WithHTTPPathPattern("/v1/info"))
+		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/ojs.OjsService/GetServerInfo", runtime.WithHTTPPathPattern("/api/v1/info"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -1022,7 +1022,7 @@ func RegisterOjsServiceHandlerServer(ctx context.Context, mux *runtime.ServeMux,
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/ojs.OjsService/CreateAccount", runtime.WithHTTPPathPattern("/v1/accounts"))
+		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/ojs.OjsService/CreateAccount", runtime.WithHTTPPathPattern("/api/v1/accounts"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -1047,7 +1047,7 @@ func RegisterOjsServiceHandlerServer(ctx context.Context, mux *runtime.ServeMux,
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/ojs.OjsService/GetAccount", runtime.WithHTTPPathPattern("/v1/accounts/{id}"))
+		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/ojs.OjsService/GetAccount", runtime.WithHTTPPathPattern("/api/v1/accounts/{id}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -1072,7 +1072,7 @@ func RegisterOjsServiceHandlerServer(ctx context.Context, mux *runtime.ServeMux,
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/ojs.OjsService/CreateSession", runtime.WithHTTPPathPattern("/v1/sessions"))
+		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/ojs.OjsService/CreateSession", runtime.WithHTTPPathPattern("/api/v1/sessions"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -1097,7 +1097,7 @@ func RegisterOjsServiceHandlerServer(ctx context.Context, mux *runtime.ServeMux,
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/ojs.OjsService/DeleteSession", runtime.WithHTTPPathPattern("/v1/sessions"))
+		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/ojs.OjsService/DeleteSession", runtime.WithHTTPPathPattern("/api/v1/sessions"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -1122,7 +1122,7 @@ func RegisterOjsServiceHandlerServer(ctx context.Context, mux *runtime.ServeMux,
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/ojs.OjsService/CreateProblem", runtime.WithHTTPPathPattern("/v1/problems"))
+		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/ojs.OjsService/CreateProblem", runtime.WithHTTPPathPattern("/api/v1/problems"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -1147,7 +1147,7 @@ func RegisterOjsServiceHandlerServer(ctx context.Context, mux *runtime.ServeMux,
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/ojs.OjsService/GetProblemList", runtime.WithHTTPPathPattern("/v1/problems"))
+		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/ojs.OjsService/GetProblemList", runtime.WithHTTPPathPattern("/api/v1/problems"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -1172,7 +1172,7 @@ func RegisterOjsServiceHandlerServer(ctx context.Context, mux *runtime.ServeMux,
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/ojs.OjsService/GetProblem", runtime.WithHTTPPathPattern("/v1/problems/{id}"))
+		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/ojs.OjsService/GetProblem", runtime.WithHTTPPathPattern("/api/v1/problems/{id}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -1197,7 +1197,7 @@ func RegisterOjsServiceHandlerServer(ctx context.Context, mux *runtime.ServeMux,
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/ojs.OjsService/UpdateProblem", runtime.WithHTTPPathPattern("/v1/problems/{id}"))
+		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/ojs.OjsService/UpdateProblem", runtime.WithHTTPPathPattern("/api/v1/problems/{id}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -1222,7 +1222,7 @@ func RegisterOjsServiceHandlerServer(ctx context.Context, mux *runtime.ServeMux,
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/ojs.OjsService/DeleteProblem", runtime.WithHTTPPathPattern("/v1/problems/{id}"))
+		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/ojs.OjsService/DeleteProblem", runtime.WithHTTPPathPattern("/api/v1/problems/{id}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -1247,7 +1247,7 @@ func RegisterOjsServiceHandlerServer(ctx context.Context, mux *runtime.ServeMux,
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/ojs.OjsService/CreateTestCase", runtime.WithHTTPPathPattern("/v1/test-cases"))
+		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/ojs.OjsService/CreateTestCase", runtime.WithHTTPPathPattern("/api/v1/test-cases"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -1272,7 +1272,7 @@ func RegisterOjsServiceHandlerServer(ctx context.Context, mux *runtime.ServeMux,
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/ojs.OjsService/GetProblemTestCaseList", runtime.WithHTTPPathPattern("/v1/problems/{id}/test-cases"))
+		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/ojs.OjsService/GetProblemTestCaseList", runtime.WithHTTPPathPattern("/api/v1/problems/{id}/test-cases"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -1297,7 +1297,7 @@ func RegisterOjsServiceHandlerServer(ctx context.Context, mux *runtime.ServeMux,
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/ojs.OjsService/GetTestCase", runtime.WithHTTPPathPattern("/v1/test-cases/{id}"))
+		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/ojs.OjsService/GetTestCase", runtime.WithHTTPPathPattern("/api/v1/test-cases/{id}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -1322,7 +1322,7 @@ func RegisterOjsServiceHandlerServer(ctx context.Context, mux *runtime.ServeMux,
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/ojs.OjsService/UpdateTestCase", runtime.WithHTTPPathPattern("/v1/test-cases/{id}"))
+		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/ojs.OjsService/UpdateTestCase", runtime.WithHTTPPathPattern("/api/v1/test-cases/{id}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -1347,7 +1347,7 @@ func RegisterOjsServiceHandlerServer(ctx context.Context, mux *runtime.ServeMux,
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/ojs.OjsService/DeleteTestCase", runtime.WithHTTPPathPattern("/v1/test-cases/{id}"))
+		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/ojs.OjsService/DeleteTestCase", runtime.WithHTTPPathPattern("/api/v1/test-cases/{id}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -1372,7 +1372,7 @@ func RegisterOjsServiceHandlerServer(ctx context.Context, mux *runtime.ServeMux,
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/ojs.OjsService/CreateSubmission", runtime.WithHTTPPathPattern("/v1/submissions"))
+		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/ojs.OjsService/CreateSubmission", runtime.WithHTTPPathPattern("/api/v1/submissions"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -1397,7 +1397,7 @@ func RegisterOjsServiceHandlerServer(ctx context.Context, mux *runtime.ServeMux,
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/ojs.OjsService/GetSubmission", runtime.WithHTTPPathPattern("/v1/submissions/{id}"))
+		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/ojs.OjsService/GetSubmission", runtime.WithHTTPPathPattern("/api/v1/submissions/{id}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -1422,7 +1422,7 @@ func RegisterOjsServiceHandlerServer(ctx context.Context, mux *runtime.ServeMux,
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/ojs.OjsService/GetSubmissionList", runtime.WithHTTPPathPattern("/v1/submissions"))
+		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/ojs.OjsService/GetSubmissionList", runtime.WithHTTPPathPattern("/api/v1/submissions"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -1447,7 +1447,7 @@ func RegisterOjsServiceHandlerServer(ctx context.Context, mux *runtime.ServeMux,
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/ojs.OjsService/GetProblemSubmissionList", runtime.WithHTTPPathPattern("/v1/problems/{id}/submissions"))
+		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/ojs.OjsService/GetProblemSubmissionList", runtime.WithHTTPPathPattern("/api/v1/problems/{id}/submissions"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -1472,7 +1472,7 @@ func RegisterOjsServiceHandlerServer(ctx context.Context, mux *runtime.ServeMux,
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/ojs.OjsService/GetAccountProblemSubmissionList", runtime.WithHTTPPathPattern("/v1/accounts/{account_id}/problems/{problem_id}/submissions"))
+		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/ojs.OjsService/GetAccountProblemSubmissionList", runtime.WithHTTPPathPattern("/api/v1/accounts/{account_id}/problems/{problem_id}/submissions"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -1586,7 +1586,7 @@ func RegisterOjsServiceHandlerClient(ctx context.Context, mux *runtime.ServeMux,
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/ojs.OjsService/GetServerInfo", runtime.WithHTTPPathPattern("/v1/info"))
+		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/ojs.OjsService/GetServerInfo", runtime.WithHTTPPathPattern("/api/v1/info"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -1608,7 +1608,7 @@ func RegisterOjsServiceHandlerClient(ctx context.Context, mux *runtime.ServeMux,
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/ojs.OjsService/CreateAccount", runtime.WithHTTPPathPattern("/v1/accounts"))
+		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/ojs.OjsService/CreateAccount", runtime.WithHTTPPathPattern("/api/v1/accounts"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -1630,7 +1630,7 @@ func RegisterOjsServiceHandlerClient(ctx context.Context, mux *runtime.ServeMux,
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/ojs.OjsService/GetAccount", runtime.WithHTTPPathPattern("/v1/accounts/{id}"))
+		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/ojs.OjsService/GetAccount", runtime.WithHTTPPathPattern("/api/v1/accounts/{id}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -1652,7 +1652,7 @@ func RegisterOjsServiceHandlerClient(ctx context.Context, mux *runtime.ServeMux,
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/ojs.OjsService/CreateSession", runtime.WithHTTPPathPattern("/v1/sessions"))
+		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/ojs.OjsService/CreateSession", runtime.WithHTTPPathPattern("/api/v1/sessions"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -1674,7 +1674,7 @@ func RegisterOjsServiceHandlerClient(ctx context.Context, mux *runtime.ServeMux,
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/ojs.OjsService/DeleteSession", runtime.WithHTTPPathPattern("/v1/sessions"))
+		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/ojs.OjsService/DeleteSession", runtime.WithHTTPPathPattern("/api/v1/sessions"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -1696,7 +1696,7 @@ func RegisterOjsServiceHandlerClient(ctx context.Context, mux *runtime.ServeMux,
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/ojs.OjsService/CreateProblem", runtime.WithHTTPPathPattern("/v1/problems"))
+		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/ojs.OjsService/CreateProblem", runtime.WithHTTPPathPattern("/api/v1/problems"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -1718,7 +1718,7 @@ func RegisterOjsServiceHandlerClient(ctx context.Context, mux *runtime.ServeMux,
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/ojs.OjsService/GetProblemList", runtime.WithHTTPPathPattern("/v1/problems"))
+		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/ojs.OjsService/GetProblemList", runtime.WithHTTPPathPattern("/api/v1/problems"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -1740,7 +1740,7 @@ func RegisterOjsServiceHandlerClient(ctx context.Context, mux *runtime.ServeMux,
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/ojs.OjsService/GetProblem", runtime.WithHTTPPathPattern("/v1/problems/{id}"))
+		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/ojs.OjsService/GetProblem", runtime.WithHTTPPathPattern("/api/v1/problems/{id}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -1762,7 +1762,7 @@ func RegisterOjsServiceHandlerClient(ctx context.Context, mux *runtime.ServeMux,
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/ojs.OjsService/UpdateProblem", runtime.WithHTTPPathPattern("/v1/problems/{id}"))
+		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/ojs.OjsService/UpdateProblem", runtime.WithHTTPPathPattern("/api/v1/problems/{id}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -1784,7 +1784,7 @@ func RegisterOjsServiceHandlerClient(ctx context.Context, mux *runtime.ServeMux,
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/ojs.OjsService/DeleteProblem", runtime.WithHTTPPathPattern("/v1/problems/{id}"))
+		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/ojs.OjsService/DeleteProblem", runtime.WithHTTPPathPattern("/api/v1/problems/{id}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -1806,7 +1806,7 @@ func RegisterOjsServiceHandlerClient(ctx context.Context, mux *runtime.ServeMux,
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/ojs.OjsService/CreateTestCase", runtime.WithHTTPPathPattern("/v1/test-cases"))
+		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/ojs.OjsService/CreateTestCase", runtime.WithHTTPPathPattern("/api/v1/test-cases"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -1828,7 +1828,7 @@ func RegisterOjsServiceHandlerClient(ctx context.Context, mux *runtime.ServeMux,
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/ojs.OjsService/GetProblemTestCaseList", runtime.WithHTTPPathPattern("/v1/problems/{id}/test-cases"))
+		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/ojs.OjsService/GetProblemTestCaseList", runtime.WithHTTPPathPattern("/api/v1/problems/{id}/test-cases"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -1850,7 +1850,7 @@ func RegisterOjsServiceHandlerClient(ctx context.Context, mux *runtime.ServeMux,
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/ojs.OjsService/GetTestCase", runtime.WithHTTPPathPattern("/v1/test-cases/{id}"))
+		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/ojs.OjsService/GetTestCase", runtime.WithHTTPPathPattern("/api/v1/test-cases/{id}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -1872,7 +1872,7 @@ func RegisterOjsServiceHandlerClient(ctx context.Context, mux *runtime.ServeMux,
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/ojs.OjsService/UpdateTestCase", runtime.WithHTTPPathPattern("/v1/test-cases/{id}"))
+		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/ojs.OjsService/UpdateTestCase", runtime.WithHTTPPathPattern("/api/v1/test-cases/{id}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -1894,7 +1894,7 @@ func RegisterOjsServiceHandlerClient(ctx context.Context, mux *runtime.ServeMux,
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/ojs.OjsService/DeleteTestCase", runtime.WithHTTPPathPattern("/v1/test-cases/{id}"))
+		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/ojs.OjsService/DeleteTestCase", runtime.WithHTTPPathPattern("/api/v1/test-cases/{id}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -1916,7 +1916,7 @@ func RegisterOjsServiceHandlerClient(ctx context.Context, mux *runtime.ServeMux,
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/ojs.OjsService/CreateSubmission", runtime.WithHTTPPathPattern("/v1/submissions"))
+		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/ojs.OjsService/CreateSubmission", runtime.WithHTTPPathPattern("/api/v1/submissions"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -1938,7 +1938,7 @@ func RegisterOjsServiceHandlerClient(ctx context.Context, mux *runtime.ServeMux,
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/ojs.OjsService/GetSubmission", runtime.WithHTTPPathPattern("/v1/submissions/{id}"))
+		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/ojs.OjsService/GetSubmission", runtime.WithHTTPPathPattern("/api/v1/submissions/{id}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -1960,7 +1960,7 @@ func RegisterOjsServiceHandlerClient(ctx context.Context, mux *runtime.ServeMux,
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/ojs.OjsService/GetSubmissionList", runtime.WithHTTPPathPattern("/v1/submissions"))
+		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/ojs.OjsService/GetSubmissionList", runtime.WithHTTPPathPattern("/api/v1/submissions"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -1982,7 +1982,7 @@ func RegisterOjsServiceHandlerClient(ctx context.Context, mux *runtime.ServeMux,
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/ojs.OjsService/GetProblemSubmissionList", runtime.WithHTTPPathPattern("/v1/problems/{id}/submissions"))
+		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/ojs.OjsService/GetProblemSubmissionList", runtime.WithHTTPPathPattern("/api/v1/problems/{id}/submissions"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -2004,7 +2004,7 @@ func RegisterOjsServiceHandlerClient(ctx context.Context, mux *runtime.ServeMux,
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/ojs.OjsService/GetAccountProblemSubmissionList", runtime.WithHTTPPathPattern("/v1/accounts/{account_id}/problems/{problem_id}/submissions"))
+		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/ojs.OjsService/GetAccountProblemSubmissionList", runtime.WithHTTPPathPattern("/api/v1/accounts/{account_id}/problems/{problem_id}/submissions"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -2068,45 +2068,45 @@ func RegisterOjsServiceHandlerClient(ctx context.Context, mux *runtime.ServeMux,
 }
 
 var (
-	pattern_OjsService_GetServerInfo_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v1", "info"}, ""))
+	pattern_OjsService_GetServerInfo_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"api", "v1", "info"}, ""))
 
-	pattern_OjsService_CreateAccount_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v1", "accounts"}, ""))
+	pattern_OjsService_CreateAccount_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"api", "v1", "accounts"}, ""))
 
-	pattern_OjsService_GetAccount_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v1", "accounts", "id"}, ""))
+	pattern_OjsService_GetAccount_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"api", "v1", "accounts", "id"}, ""))
 
-	pattern_OjsService_CreateSession_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v1", "sessions"}, ""))
+	pattern_OjsService_CreateSession_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"api", "v1", "sessions"}, ""))
 
-	pattern_OjsService_DeleteSession_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v1", "sessions"}, ""))
+	pattern_OjsService_DeleteSession_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"api", "v1", "sessions"}, ""))
 
-	pattern_OjsService_CreateProblem_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v1", "problems"}, ""))
+	pattern_OjsService_CreateProblem_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"api", "v1", "problems"}, ""))
 
-	pattern_OjsService_GetProblemList_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v1", "problems"}, ""))
+	pattern_OjsService_GetProblemList_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"api", "v1", "problems"}, ""))
 
-	pattern_OjsService_GetProblem_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v1", "problems", "id"}, ""))
+	pattern_OjsService_GetProblem_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"api", "v1", "problems", "id"}, ""))
 
-	pattern_OjsService_UpdateProblem_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v1", "problems", "id"}, ""))
+	pattern_OjsService_UpdateProblem_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"api", "v1", "problems", "id"}, ""))
 
-	pattern_OjsService_DeleteProblem_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v1", "problems", "id"}, ""))
+	pattern_OjsService_DeleteProblem_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"api", "v1", "problems", "id"}, ""))
 
-	pattern_OjsService_CreateTestCase_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v1", "test-cases"}, ""))
+	pattern_OjsService_CreateTestCase_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"api", "v1", "test-cases"}, ""))
 
-	pattern_OjsService_GetProblemTestCaseList_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2, 2, 3}, []string{"v1", "problems", "id", "test-cases"}, ""))
+	pattern_OjsService_GetProblemTestCaseList_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4}, []string{"api", "v1", "problems", "id", "test-cases"}, ""))
 
-	pattern_OjsService_GetTestCase_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v1", "test-cases", "id"}, ""))
+	pattern_OjsService_GetTestCase_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"api", "v1", "test-cases", "id"}, ""))
 
-	pattern_OjsService_UpdateTestCase_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v1", "test-cases", "id"}, ""))
+	pattern_OjsService_UpdateTestCase_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"api", "v1", "test-cases", "id"}, ""))
 
-	pattern_OjsService_DeleteTestCase_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v1", "test-cases", "id"}, ""))
+	pattern_OjsService_DeleteTestCase_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"api", "v1", "test-cases", "id"}, ""))
 
-	pattern_OjsService_CreateSubmission_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v1", "submissions"}, ""))
+	pattern_OjsService_CreateSubmission_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"api", "v1", "submissions"}, ""))
 
-	pattern_OjsService_GetSubmission_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v1", "submissions", "id"}, ""))
+	pattern_OjsService_GetSubmission_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"api", "v1", "submissions", "id"}, ""))
 
-	pattern_OjsService_GetSubmissionList_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v1", "submissions"}, ""))
+	pattern_OjsService_GetSubmissionList_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"api", "v1", "submissions"}, ""))
 
-	pattern_OjsService_GetProblemSubmissionList_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2, 2, 3}, []string{"v1", "problems", "id", "submissions"}, ""))
+	pattern_OjsService_GetProblemSubmissionList_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4}, []string{"api", "v1", "problems", "id", "submissions"}, ""))
 
-	pattern_OjsService_GetAccountProblemSubmissionList_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5}, []string{"v1", "accounts", "account_id", "problems", "problem_id", "submissions"}, ""))
+	pattern_OjsService_GetAccountProblemSubmissionList_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4, 1, 0, 4, 1, 5, 5, 2, 6}, []string{"api", "v1", "accounts", "account_id", "problems", "problem_id", "submissions"}, ""))
 
 	pattern_OjsService_GetAndUpdateFirstSubmittedSubmissionToExecuting_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"ojs.OjsService", "GetAndUpdateFirstSubmittedSubmissionToExecuting"}, ""))
 

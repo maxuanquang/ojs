@@ -2,6 +2,7 @@ package logic
 
 import (
 	"context"
+	"errors"
 
 	"github.com/maxuanquang/ojs/internal/dataaccess/database"
 	"github.com/maxuanquang/ojs/internal/dataaccess/mq/producer"
@@ -16,6 +17,8 @@ type SubmissionLogic interface {
 	GetSubmissionList(ctx context.Context, in GetSubmissionListInput) (GetSubmissionListOutput, error)
 	GetAccountProblemSubmissionList(ctx context.Context, in GetAccountProblemSubmissionListInput) (GetAccountProblemSubmissionListOutput, error)
 	GetProblemSubmissionList(ctx context.Context, in GetProblemSubmissionListInput) (GetProblemSubmissionListOutput, error)
+
+	ExecuteSubmission(ctx context.Context, in ExecuteSubmissionInput) error
 }
 
 func NewSubmissionLogic(
@@ -25,6 +28,7 @@ func NewSubmissionLogic(
 	submissionDataAccessor database.SubmissionDataAccessor,
 	testCaseDataAccessor database.TestCaseDataAccessor,
 	tokenLogic TokenLogic,
+	judgeLogic JudgeLogic,
 	submissionCreatedProducer producer.SubmissionCreatedProducer,
 	database database.Database,
 ) SubmissionLogic {
@@ -35,6 +39,7 @@ func NewSubmissionLogic(
 		submissionDataAccessor:    submissionDataAccessor,
 		testCaseDataAccessor:      testCaseDataAccessor,
 		tokenLogic:                tokenLogic,
+		judgeLogic:                judgeLogic,
 		submissionCreatedProducer: submissionCreatedProducer,
 		database:                  database,
 	}
@@ -47,6 +52,7 @@ type submissionLogic struct {
 	submissionDataAccessor    database.SubmissionDataAccessor
 	testCaseDataAccessor      database.TestCaseDataAccessor
 	tokenLogic                TokenLogic
+	judgeLogic                JudgeLogic
 	submissionCreatedProducer producer.SubmissionCreatedProducer
 	database                  database.Database
 }
@@ -67,13 +73,13 @@ func (p *submissionLogic) CreateSubmission(ctx context.Context, in CreateSubmiss
 	}
 
 	// Create submission in the database
-
 	txErr = p.database.Transaction(func(tx *gorm.DB) error {
 		createdSubmission, err = p.submissionDataAccessor.WithDatabaseTransaction(tx).CreateSubmission(ctx, database.Submission{
 			OfProblemID: in.OfProblemID,
 			AuthorID:    accountID,
 			Content:     in.Content,
 			Language:    in.Language,
+			Status:      int8(ojs.SubmissionStatus_Submitted),
 		})
 		if err != nil {
 			p.logger.Error("failed to create submission", zap.Error(err))
@@ -234,6 +240,72 @@ func (p *submissionLogic) GetProblemSubmissionList(ctx context.Context, in GetPr
 	}, nil
 }
 
+// ExecuteSubmission implements SubmissionLogic.
+func (s *submissionLogic) ExecuteSubmission(ctx context.Context, in ExecuteSubmissionInput) error {
+	var (
+		err        error
+		txErr      error
+		submission database.Submission
+	)
+
+	txErr = s.database.Transaction(func(tx *gorm.DB) error {
+		submission, err = s.submissionDataAccessor.WithDatabaseTransaction(tx).GetSubmissionByID(ctx, in.ID)
+		if err != nil {
+			s.logger.Error("Failed to get submission", zap.Error(err))
+			return err
+		}
+
+		if submission.Status != int8(ojs.SubmissionStatus_Submitted) {
+			s.logger.Error("Submission is not submitted", zap.Uint64("submission_id", submission.ID))
+			return errors.New("submission is not submitted")
+		}
+
+		submission.Status = int8(ojs.SubmissionStatus_Executing)
+		_, err = s.submissionDataAccessor.WithDatabaseTransaction(tx).UpdateSubmission(ctx, submission)
+		if err != nil {
+			s.logger.Error("Failed to update submission", zap.Error(err))
+			return err
+		}
+
+		return nil
+	})
+	if txErr != nil {
+		s.logger.Error("execute submission transaction failed", zap.Error(txErr))
+		return txErr
+	}
+
+	// TODO: Implement judgeLogic
+	result, err := s.judgeLogic.Judge(
+		ctx,
+		databaseSubmissionToLogicSubmission(submission),
+	)
+	if err != nil {
+		s.logger.Error("Failed to judge submission", zap.Error(err))
+	}
+
+	// Update submission result and status in the database
+	submission.Result = int8(result)
+	submission.Status = int8(ojs.SubmissionStatus_Finished)
+	s.submissionDataAccessor.UpdateSubmission(
+		ctx,
+		submission,
+	)
+
+	return nil
+}
+
+func databaseSubmissionToLogicSubmission(submission database.Submission) Submission {
+	return Submission{
+		ID:          submission.ID,
+		OfProblemID: submission.OfProblemID,
+		AuthorID:    submission.AuthorID,
+		Content:     submission.Content,
+		Language:    submission.Language,
+		Status:      ojs.SubmissionStatus(submission.Status),
+		Result:      ojs.SubmissionResult(submission.Result),
+	}
+}
+
 type CreateSubmissionInput struct {
 	Token       string
 	OfProblemID uint64
@@ -296,4 +368,8 @@ type GetProblemSubmissionListInput struct {
 type GetProblemSubmissionListOutput struct {
 	Submissions           []Submission
 	TotalSubmissionsCount uint64
+}
+
+type ExecuteSubmissionInput struct {
+	ID uint64
 }

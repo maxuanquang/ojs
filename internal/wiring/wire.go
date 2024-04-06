@@ -23,7 +23,7 @@ var WireSet = wire.NewSet(
 	app.WireSet,
 )
 
-func InitializeAppServer(configFilePath configs.ConfigFilePath) (app.Server, func(), error) {
+func InitializeAppServer(configFilePath configs.ConfigFilePath, appArguments utils.Arguments) (app.Server, func(), error) {
 	wire.Build(WireSet)
 
 	return app.Server{}, nil, nil

@@ -5,6 +5,7 @@ import (
 	"log"
 
 	"github.com/maxuanquang/ojs/internal/configs"
+	"github.com/maxuanquang/ojs/internal/utils"
 	"github.com/maxuanquang/ojs/internal/wiring"
 	"github.com/spf13/cobra"
 )
@@ -27,7 +28,7 @@ func server() *cobra.Command {
 				return err
 			}
 
-			app, cleanup, err := wiring.InitializeAppServer(configs.ConfigFilePath(configFilePath))
+			app, cleanup, err := wiring.InitializeAppServer(configs.ConfigFilePath(configFilePath), utils.Arguments{})
 			if err != nil {
 				return err
 			}

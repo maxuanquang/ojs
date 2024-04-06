@@ -18,11 +18,13 @@ func NewHandler(
 	accountLogic logic.AccountLogic,
 	problemLogic logic.ProblemLogic,
 	submissionLogic logic.SubmissionLogic,
+	testCaseLogic logic.TestCaseLogic,
 ) ojs.OjsServiceServer {
 	return &Handler{
 		accountLogic:    accountLogic,
 		problemLogic:    problemLogic,
 		submissionLogic: submissionLogic,
+		testCaseLogic:   testCaseLogic,
 	}
 }
 
@@ -31,6 +33,7 @@ type Handler struct {
 	accountLogic    logic.AccountLogic
 	problemLogic    logic.ProblemLogic
 	submissionLogic logic.SubmissionLogic
+	testCaseLogic   logic.TestCaseLogic
 }
 
 // CreateProblem implements ojs.OjsServiceServer.
@@ -262,7 +265,7 @@ func (h *Handler) DeleteProblem(ctx context.Context, in *ojs.DeleteProblemReques
 
 func (h *Handler) CreateTestCase(ctx context.Context, in *ojs.CreateTestCaseRequest) (*ojs.CreateTestCaseResponse, error) {
 	// Call the corresponding method of h.testCaseLogic
-	output, err := h.problemLogic.CreateTestCase(
+	output, err := h.testCaseLogic.CreateTestCase(
 		ctx,
 		logic.CreateTestCaseInput{
 			OfProblemID: in.GetOfProblemId(),
@@ -291,7 +294,7 @@ func (h *Handler) CreateTestCase(ctx context.Context, in *ojs.CreateTestCaseRequ
 
 func (h *Handler) GetTestCase(ctx context.Context, in *ojs.GetTestCaseRequest) (*ojs.GetTestCaseResponse, error) {
 	// Call the corresponding method of h.testCaseLogic
-	output, err := h.problemLogic.GetTestCase(
+	output, err := h.testCaseLogic.GetTestCase(
 		ctx,
 		logic.GetTestCaseInput{
 			ID: in.GetId(),
@@ -317,7 +320,7 @@ func (h *Handler) GetTestCase(ctx context.Context, in *ojs.GetTestCaseRequest) (
 
 func (h *Handler) GetProblemTestCaseList(ctx context.Context, in *ojs.GetProblemTestCaseListRequest) (*ojs.GetProblemTestCaseListResponse, error) {
 	// Call the corresponding method of h.testCaseLogic
-	output, err := h.problemLogic.GetProblemTestCaseList(
+	output, err := h.testCaseLogic.GetProblemTestCaseList(
 		ctx,
 		logic.GetProblemTestCaseListInput{
 			OfProblemID: in.GetId(),
@@ -350,7 +353,7 @@ func (h *Handler) GetProblemTestCaseList(ctx context.Context, in *ojs.GetProblem
 
 func (h *Handler) DeleteTestCase(ctx context.Context, in *ojs.DeleteTestCaseRequest) (*ojs.DeleteTestCaseResponse, error) {
 	// Call the corresponding method of h.testCaseLogic
-	err := h.problemLogic.DeleteTestCase(
+	err := h.testCaseLogic.DeleteTestCase(
 		ctx,
 		logic.DeleteTestCaseInput{
 			ID: in.GetId(),
@@ -366,7 +369,7 @@ func (h *Handler) DeleteTestCase(ctx context.Context, in *ojs.DeleteTestCaseRequ
 
 func (h *Handler) UpdateTestCase(ctx context.Context, in *ojs.UpdateTestCaseRequest) (*ojs.UpdateTestCaseResponse, error) {
 	// Call the corresponding method of h.testCaseLogic
-	updatedTestCase, err := h.problemLogic.UpdateTestCase(
+	updatedTestCase, err := h.testCaseLogic.UpdateTestCase(
 		ctx,
 		logic.UpdateTestCaseInput{
 			ID:       in.GetId(),

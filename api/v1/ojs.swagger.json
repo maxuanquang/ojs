@@ -16,7 +16,7 @@
     "application/json"
   ],
   "paths": {
-    "/v1/accounts": {
+    "/api/v1/accounts": {
       "post": {
         "operationId": "OjsService_CreateAccount",
         "responses": {
@@ -48,7 +48,7 @@
         ]
       }
     },
-    "/v1/accounts/{accountId}/problems/{problemId}/submissions": {
+    "/api/v1/accounts/{accountId}/problems/{problemId}/submissions": {
       "get": {
         "operationId": "OjsService_GetAccountProblemSubmissionList",
         "responses": {
@@ -100,7 +100,7 @@
         ]
       }
     },
-    "/v1/accounts/{id}": {
+    "/api/v1/accounts/{id}": {
       "get": {
         "operationId": "OjsService_GetAccount",
         "responses": {
@@ -131,7 +131,7 @@
         ]
       }
     },
-    "/v1/info": {
+    "/api/v1/info": {
       "get": {
         "operationId": "OjsService_GetServerInfo",
         "responses": {
@@ -153,7 +153,7 @@
         ]
       }
     },
-    "/v1/problems": {
+    "/api/v1/problems": {
       "get": {
         "operationId": "OjsService_GetProblemList",
         "responses": {
@@ -221,7 +221,7 @@
         ]
       }
     },
-    "/v1/problems/{id}": {
+    "/api/v1/problems/{id}": {
       "get": {
         "operationId": "OjsService_GetProblem",
         "responses": {
@@ -318,7 +318,7 @@
         ]
       }
     },
-    "/v1/problems/{id}/submissions": {
+    "/api/v1/problems/{id}/submissions": {
       "get": {
         "operationId": "OjsService_GetProblemSubmissionList",
         "responses": {
@@ -363,7 +363,7 @@
         ]
       }
     },
-    "/v1/problems/{id}/test-cases": {
+    "/api/v1/problems/{id}/test-cases": {
       "get": {
         "operationId": "OjsService_GetProblemTestCaseList",
         "responses": {
@@ -408,7 +408,7 @@
         ]
       }
     },
-    "/v1/sessions": {
+    "/api/v1/sessions": {
       "delete": {
         "operationId": "OjsService_DeleteSession",
         "responses": {
@@ -460,7 +460,7 @@
         ]
       }
     },
-    "/v1/submissions": {
+    "/api/v1/submissions": {
       "get": {
         "operationId": "OjsService_GetSubmissionList",
         "responses": {
@@ -528,7 +528,7 @@
         ]
       }
     },
-    "/v1/submissions/{id}": {
+    "/api/v1/submissions/{id}": {
       "get": {
         "operationId": "OjsService_GetSubmission",
         "responses": {
@@ -559,7 +559,7 @@
         ]
       }
     },
-    "/v1/test-cases": {
+    "/api/v1/test-cases": {
       "post": {
         "operationId": "OjsService_CreateTestCase",
         "responses": {
@@ -591,7 +591,7 @@
         ]
       }
     },
-    "/v1/test-cases/{id}": {
+    "/api/v1/test-cases/{id}": {
       "get": {
         "operationId": "OjsService_GetTestCase",
         "responses": {
@@ -1017,7 +1017,8 @@
       "enum": [
         "UndefinedRole",
         "Admin",
-        "Contester"
+        "Contester",
+        "ProblemSetter"
       ],
       "default": "UndefinedRole"
     },
@@ -1055,7 +1056,7 @@
       "enum": [
         "UndefinedResult",
         "OK",
-        "ComplieError",
+        "CompileError",
         "RuntimeError",
         "TimeLimitExceeded",
         "MemoryLimitExceeded",

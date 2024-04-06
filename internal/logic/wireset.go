@@ -8,4 +8,7 @@ var WireSet = wire.NewSet(
 	NewTokenLogic,
 	NewProblemLogic,
 	NewSubmissionLogic,
+	NewTestCaseLogic,
+	NewJudgeLogic,
+	NewCompileLogic,
 )

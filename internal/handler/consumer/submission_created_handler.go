@@ -32,15 +32,16 @@ func (d *submissionCreatedHandler) Handle(ctx context.Context, submissionID uint
 	logger := utils.LoggerWithContext(ctx, d.logger).With(zap.Any("submissionID", submissionID))
 
 	logger.Info("submission created event received at handlerFunc")
-	// err := d.submissionLogic.ExecuteSubmission(
-	// 	ctx,
-	// 	logic.ExecuteSubmissionInput{},
-	// )
-
-	// if err != nil {
-	// 	logger.With(zap.Error(err)).Error("failed to download event")
-	// 	return err
-	// }
+	err := d.submissionLogic.ExecuteSubmission(
+		ctx,
+		logic.ExecuteSubmissionInput{
+			ID: submissionID,
+		},
+	)
+	if err != nil {
+		logger.With(zap.Error(err)).Error("failed to execute submission")
+		return err
+	}
 
 	return nil
 }

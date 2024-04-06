@@ -18,6 +18,7 @@ type Config struct {
 	HTTP     HTTP     `yaml:"http"`
 	GRPC     GRPC     `yaml:"grpc"`
 	MQ       MQ       `yaml:"mq"`
+	Judge    Judge    `yaml:"judge"`
 }
 
 func NewConfig(configFilePath ConfigFilePath) (Config, error) {
