@@ -700,12 +700,10 @@
           "type": "string"
         },
         "timeLimit": {
-          "type": "string",
-          "format": "uint64"
+          "type": "string"
         },
         "memoryLimit": {
-          "type": "string",
-          "format": "uint64"
+          "type": "string"
         }
       }
     },
@@ -770,12 +768,10 @@
           "type": "string"
         },
         "timeLimit": {
-          "type": "string",
-          "format": "uint64"
+          "type": "string"
         },
         "memoryLimit": {
-          "type": "string",
-          "format": "uint64"
+          "type": "string"
         }
       }
     },
@@ -1003,12 +999,10 @@
           "type": "string"
         },
         "timeLimit": {
-          "type": "string",
-          "format": "uint64"
+          "type": "string"
         },
         "memoryLimit": {
-          "type": "string",
-          "format": "uint64"
+          "type": "string"
         }
       }
     },

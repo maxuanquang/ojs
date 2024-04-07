@@ -20,12 +20,11 @@ import (
 )
 
 const (
-	defaultHostWorkingDir              = "/tmp/ojs-compile"
-	defaultContainerWorkingDir         = "/tmp/ojs-compile"
-	modeOwnerAllPermission             = 0700
-	defaultCPUPeriod                   = 100000
-	SourceFilePathPlaceholder          = "$SOURCE"
-	CompiledProgramFilePathPlaceholder = "$PROGRAM"
+	hostTempWorkingDir                = "/tmp/ojs-compile"
+	modeOwnerAllPermission            = 0700
+	defaultCPUPeriod                  = 100000
+	compileSourceFilePathPlaceholder  = "$SOURCE"
+	compileProgramFilePathPlaceholder = "$PROGRAM"
 )
 
 type CompileOutput struct {
@@ -100,7 +99,7 @@ type compileLogic struct {
 
 // Compile implements CompileLogic.
 func (c *compileLogic) Compile(ctx context.Context, content string) (CompileOutput, error) {
-	hostWorkingDir := defaultHostWorkingDir
+	hostWorkingDir := filepath.Join(hostTempWorkingDir, uuid.NewString())
 
 	err := os.MkdirAll(hostWorkingDir, modeOwnerAllPermission)
 	if err != nil {
@@ -109,19 +108,19 @@ func (c *compileLogic) Compile(ctx context.Context, content string) (CompileOutp
 	}
 	c.logger.Info("temp dir created", zap.String("temp_dir", hostWorkingDir))
 
-	sourceFileName := uuid.NewString() + c.compileConfig.SourceFileExtension
+	var sourceFileName string
+	if c.compileConfig == nil {
+		sourceFileName = uuid.NewString()
+	} else {
+		sourceFileName = c.compileConfig.SourceFileName
+	}
+
 	sourceFile, err := c.createSourceFile(ctx, hostWorkingDir, sourceFileName, content)
 	if err != nil {
 		c.logger.With(zap.Error(err)).Error("failed to create source file")
 		return CompileOutput{}, err
 	}
 	c.logger.Info("source file created", zap.String("source_file", sourceFile.Name()))
-
-	defer func() {
-		if err := os.RemoveAll(sourceFile.Name()); err != nil {
-			c.logger.With(zap.Error(err)).Error("failed to remove temp dir")
-		}
-	}()
 
 	// Interpreted languages don't need to be compiled
 	if c.compileConfig == nil {
@@ -175,10 +174,11 @@ func (c *compileLogic) createSourceFile(_ context.Context, hostWorkingDir, fileN
 func (c *compileLogic) compileSourceFile(ctx context.Context, hostWorkingDir string, sourceFile *os.File) (CompileOutput, error) {
 	logger := c.logger.With(zap.String("file_name", sourceFile.Name()))
 
-	hostCompiledProgramFilePath := sourceFile.Name() + ".out"
-	containerWorkingDir := defaultContainerWorkingDir
+	hostProgramFilePath := filepath.Join(hostWorkingDir, c.compileConfig.ProgramFileName)
+
+	containerWorkingDir := hostWorkingDir
 	containerSourceFilePath := filepath.Join(containerWorkingDir, filepath.Base(sourceFile.Name()))
-	containerCompiledProgramFilePath := filepath.Join(containerWorkingDir, filepath.Base(hostCompiledProgramFilePath))
+	containerProgramFilePath := filepath.Join(containerWorkingDir, filepath.Base(c.compileConfig.ProgramFileName))
 
 	dockerContainerCtx, dockerContainerCancelFunc := context.WithTimeout(ctx, c.timeoutDuration)
 	defer dockerContainerCancelFunc()
@@ -188,7 +188,7 @@ func (c *compileLogic) compileSourceFile(ctx context.Context, hostWorkingDir str
 		&container.Config{
 			Image:        c.compileConfig.Image,
 			WorkingDir:   containerWorkingDir,
-			Cmd:          c.getCompileCommand(containerSourceFilePath, containerCompiledProgramFilePath),
+			Cmd:          c.getCompileCommand(containerSourceFilePath, containerProgramFilePath),
 			AttachStdout: true,
 			AttachStderr: true,
 		},
@@ -268,9 +268,9 @@ func (c *compileLogic) compileSourceFile(ctx context.Context, hostWorkingDir str
 			return compileOutput, nil
 		}
 
-		logger.Info("source file compiled successfully")
+		logger.With(zap.String("source_file_name", sourceFile.Name())).With(zap.String("program_file_name", hostProgramFilePath)).Info("source file compiled successfully")
 		return CompileOutput{
-			ProgramFilePath: hostCompiledProgramFilePath,
+			ProgramFilePath: hostProgramFilePath,
 		}, nil
 	case err := <-errChan:
 		logger.With(zap.String("container_id", containerID)).With(zap.Error(err)).Error("failed to wait container")
@@ -282,9 +282,9 @@ func (c *compileLogic) getCompileCommand(sourceFilePath, compiledProgramFilePath
 	commandTemplate := make([]string, len(c.compileConfig.CommandTemplate))
 	for i := range c.compileConfig.CommandTemplate {
 		switch c.compileConfig.CommandTemplate[i] {
-		case SourceFilePathPlaceholder:
+		case compileSourceFilePathPlaceholder:
 			commandTemplate[i] = sourceFilePath
-		case CompiledProgramFilePathPlaceholder:
+		case compileProgramFilePathPlaceholder:
 			commandTemplate[i] = compiledProgramFilePath
 		default:
 			commandTemplate[i] = c.compileConfig.CommandTemplate[i]

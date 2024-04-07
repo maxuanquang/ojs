@@ -28,26 +28,61 @@ mq:
   client_id: "1"
 judge:
   languages:
+    - value: c
+      name: C
+      compile:
+        image: "docker.io/library/gcc:9.5.0-bullseye"
+        cpus: 2
+        memory: 1GiB
+        timeout: 30s
+        source_file_name: "main.c"
+        program_file_name: "main.out"
+        command_template: ["g++", "-o", "$PROGRAM", "$SOURCE"]
+      execute:
+        image: "docker.io/library/debian:bullseye-slim"
+        cpus: 2
+        memory: 1GiB
+        timeout: 30s
+        command_template: ["timeout", "--foreground", "$TIMEOUT", "$PROGRAM"]
     - value: cpp
       name: C++
       compile:
         image: "docker.io/library/gcc:9.5.0-bullseye"
-        cpus: 0.5
-        memory: 4GiB
+        cpus: 2
+        memory: 1GiB
         timeout: 30s
-        source_file_extension: ".cpp"
+        source_file_name: "main.cpp"
+        program_file_name: "main.out"
         command_template: ["g++", "-o", "$PROGRAM", "$SOURCE"]
       execute:
         image: "docker.io/library/debian:bullseye-slim"
-        cpus: 0.5
-        memory: 4GiB
+        cpus: 2
+        memory: 1GiB
         timeout: 30s
-        command_template: #TODO: Define this
+        command_template: ["timeout", "--foreground", "$TIMEOUT", "$PROGRAM"]
+    - value: java
+      name: Java
+      compile:
+        image: "docker.io/library/openjdk:22-jdk-slim-buster"
+        cpus: 2
+        memory: 1GiB
+        timeout: 30s
+        source_file_name: "Main.java"
+        program_file_name: "Main.class"
+        command_template: ["javac", "$SOURCE"]
+      execute:
+        image: "docker.io/library/openjdk:22-jdk-slim-buster"
+        cpus: 2
+        memory: 1GiB
+        timeout: 30s
+        command_template:
+          ["timeout", "--foreground", "$TIMEOUT", "java", "Main"]
     - value: python
       name: Python 3
       execute:
         image: "docker.io/library/python:3.13-rc-slim"
-        cpus: 0.5
-        memory: 4GiB
+        cpus: 2
+        memory: 1GiB
         timeout: 30s
-        command_template: ["python3", "$SOURCE"]
+        command_template:
+          ["timeout", "--foreground", "$TIMEOUT", "python3", "$PROGRAM"]

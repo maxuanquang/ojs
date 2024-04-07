@@ -29,6 +29,7 @@ func NewJudgeLogic(
 
 	for _, config := range judgeConfig.Languages {
 		language := config.Value
+
 		compileLogic, err := NewCompileLogic(
 			logger,
 			dockerClient,
@@ -37,13 +38,25 @@ func NewJudgeLogic(
 			appArguments,
 		)
 		if err != nil {
-			logger.With(zap.Error(err)).Error("failed to create compile logic")
+			logger.With(zap.String("language", language)).With(zap.Error(err)).Error("failed to create compile logic")
 			return nil, err
 		}
 
 		languageToCompileLogic[language] = compileLogic
 
-		//TODO: Add languageToExecuteLogic
+		executeLogic, err := NewExecuteLogic(
+			logger,
+			dockerClient,
+			language,
+			config.Execute,
+			appArguments,
+		)
+		if err != nil {
+			logger.With(zap.String("language", language)).With(zap.Error(err)).Error("failed to create execute logic")
+			return nil, err
+		}
+
+		languageToExecuteLogic[language] = executeLogic
 	}
 
 	return &judgeLogic{
@@ -93,11 +106,17 @@ func (j *judgeLogic) Judge(ctx context.Context, submission Submission) (ojs.Subm
 	}
 
 	for _, testCase := range testCases {
-		output, err := executeLogic.Execute(ctx, compileOutput.ProgramFilePath, submission.Language, testCase.Input)
+		output, err := executeLogic.Execute(ctx, compileOutput.ProgramFilePath, testCase.Input)
 		if err != nil {
 			return ojs.SubmissionResult_RuntimeError, nil
 		}
-		if output != testCase.Output {
+		if output.MemoryLimitExceeded {
+			return ojs.SubmissionResult_MemoryLimitExceeded, nil
+		}
+		if output.TimeLimitExceeded {
+			return ojs.SubmissionResult_TimeLimitExceeded, nil
+		}
+		if output.Stdout != testCase.Output {
 			return ojs.SubmissionResult_WrongAnswer, nil
 		}
 	}

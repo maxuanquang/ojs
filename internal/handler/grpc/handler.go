@@ -2,7 +2,9 @@ package grpc
 
 import (
 	"context"
+	"time"
 
+	"github.com/dustin/go-humanize"
 	ojs "github.com/maxuanquang/ojs/internal/generated/grpc/ojs"
 	"github.com/maxuanquang/ojs/internal/logic"
 	"google.golang.org/grpc"
@@ -38,14 +40,24 @@ type Handler struct {
 
 // CreateProblem implements ojs.OjsServiceServer.
 func (h *Handler) CreateProblem(ctx context.Context, in *ojs.CreateProblemRequest) (*ojs.CreateProblemResponse, error) {
+	timeLimit, err := time.ParseDuration(in.TimeLimit)
+	if err != nil {
+		return nil, clientResponseError(err)
+	}
+
+	memoryLimit, err := humanize.ParseBytes(in.MemoryLimit)
+	if err != nil {
+		return nil, clientResponseError(err)
+	}
+
 	resp, err := h.problemLogic.CreateProblem(
 		ctx,
 		logic.CreateProblemInput{
 			Token:       h.getAuthTokenFromMetadata(ctx),
 			DisplayName: in.DisplayName,
 			Description: in.Description,
-			TimeLimit:   in.TimeLimit,
-			MemoryLimit: in.MemoryLimit,
+			TimeLimit:   uint64(timeLimit),
+			MemoryLimit: memoryLimit,
 		},
 	)
 	if err != nil {
@@ -59,8 +71,8 @@ func (h *Handler) CreateProblem(ctx context.Context, in *ojs.CreateProblemReques
 			AuthorName:  resp.Problem.AuthorName,
 			DisplayName: resp.Problem.DisplayName,
 			Description: resp.Problem.Description,
-			TimeLimit:   resp.Problem.TimeLimit,
-			MemoryLimit: resp.Problem.MemoryLimit,
+			TimeLimit:   time.Duration(resp.Problem.TimeLimit).String(),
+			MemoryLimit: humanize.Bytes(resp.Problem.MemoryLimit),
 		},
 	}, nil
 
@@ -170,8 +182,8 @@ func (h *Handler) GetProblem(ctx context.Context, in *ojs.GetProblemRequest) (*o
 			DisplayName: output.Problem.DisplayName,
 			AuthorId:    output.Problem.AuthorId,
 			Description: output.Problem.Description,
-			TimeLimit:   output.Problem.TimeLimit,
-			MemoryLimit: output.Problem.MemoryLimit,
+			TimeLimit:   time.Duration(output.Problem.TimeLimit).String(),
+			MemoryLimit: humanize.Bytes(output.Problem.MemoryLimit),
 		},
 	}
 
@@ -203,8 +215,8 @@ func (h *Handler) GetProblemList(ctx context.Context, in *ojs.GetProblemListRequ
 			DisplayName: pb.DisplayName,
 			AuthorId:    pb.AuthorId,
 			Description: pb.Description,
-			TimeLimit:   pb.TimeLimit,
-			MemoryLimit: pb.MemoryLimit,
+			TimeLimit:   time.Duration(pb.TimeLimit).String(),
+			MemoryLimit: humanize.Bytes(pb.MemoryLimit),
 		})
 	}
 
@@ -213,7 +225,16 @@ func (h *Handler) GetProblemList(ctx context.Context, in *ojs.GetProblemListRequ
 
 // UpdateProblem implements ojs.OjsServiceServer.
 func (h *Handler) UpdateProblem(ctx context.Context, in *ojs.UpdateProblemRequest) (*ojs.UpdateProblemResponse, error) {
-	// Call the corresponding method of h.problemLogic
+	timeLimit, err := time.ParseDuration(in.TimeLimit)
+	if err != nil {
+		return nil, clientResponseError(err)
+	}
+
+	memoryLimit, err := humanize.ParseBytes(in.MemoryLimit)
+	if err != nil {
+		return nil, clientResponseError(err)
+	}
+
 	output, err := h.problemLogic.UpdateProblem(
 		ctx,
 		logic.UpdateProblemInput{
@@ -221,8 +242,8 @@ func (h *Handler) UpdateProblem(ctx context.Context, in *ojs.UpdateProblemReques
 			ID:          in.GetId(),
 			DisplayName: in.DisplayName,
 			Description: in.Description,
-			TimeLimit:   in.TimeLimit,
-			MemoryLimit: in.MemoryLimit,
+			TimeLimit:   uint64(timeLimit),
+			MemoryLimit: memoryLimit,
 		},
 	)
 	if err != nil {
@@ -237,8 +258,8 @@ func (h *Handler) UpdateProblem(ctx context.Context, in *ojs.UpdateProblemReques
 			AuthorId:    output.Problem.AuthorId,
 			AuthorName:  output.Problem.AuthorName,
 			Description: output.Problem.Description,
-			TimeLimit:   output.Problem.TimeLimit,
-			MemoryLimit: output.Problem.MemoryLimit,
+			TimeLimit:   time.Duration(output.Problem.TimeLimit).String(),
+			MemoryLimit: humanize.Bytes(output.Problem.MemoryLimit),
 		},
 	}
 

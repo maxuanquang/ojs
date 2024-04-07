@@ -15,8 +15,8 @@ CREATE TABLE IF NOT EXISTS `problem` (
     `display_name` VARCHAR(255) NOT NULL,
     `author_id` BIGINT UNSIGNED NOT NULL,
     `description` TEXT NOT NULL,
-    `time_limit` INT UNSIGNED NOT NULL,
-    `memory_limit` INT UNSIGNED NOT NULL,
+    `time_limit` BIGINT UNSIGNED NOT NULL,
+    `memory_limit` BIGINT UNSIGNED NOT NULL,
     FOREIGN KEY (`author_id`) REFERENCES `account` (`id`)
 );
 

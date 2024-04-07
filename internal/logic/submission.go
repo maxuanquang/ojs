@@ -273,7 +273,6 @@ func (s *submissionLogic) ExecuteSubmission(ctx context.Context, in ExecuteSubmi
 		return txErr
 	}
 
-	// TODO: Implement judgeLogic
 	result, err := s.judgeLogic.Judge(
 		ctx,
 		databaseSubmissionToLogicSubmission(submission),

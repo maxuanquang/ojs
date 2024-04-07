@@ -7,12 +7,13 @@ import (
 )
 
 type Compile struct {
-	Image               string   `yaml:"image"`
-	Timeout             string   `yaml:"timeout"`
-	Memory              string   `yaml:"memory"`
-	CPUs                float32  `yaml:"cpus"`
-	CommandTemplate     []string `yaml:"command_template"`
-	SourceFileExtension string   `yaml:"source_file_extension"`
+	Image           string   `yaml:"image"`
+	Timeout         string   `yaml:"timeout"`
+	Memory          string   `yaml:"memory"`
+	CPUs            float32  `yaml:"cpus"`
+	CommandTemplate []string `yaml:"command_template"`
+	SourceFileName  string   `yaml:"source_file_name"`
+	ProgramFileName string   `yaml:"program_file_name"`
 }
 
 func (c *Compile) GetTimeoutInTimeDuration() (time.Duration, error) {

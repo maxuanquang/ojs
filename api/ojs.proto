@@ -168,8 +168,8 @@ message DeleteSessionResponse {}
 message CreateProblemRequest {
     string display_name = 1;
     string description = 2;
-    uint64 time_limit = 3;
-    uint64 memory_limit = 4;
+    string time_limit = 3;
+    string memory_limit = 4;
 }
 message Problem {
     uint64 id = 1;
@@ -177,8 +177,8 @@ message Problem {
     uint64 author_id = 3;
     string author_name = 4;
     string description = 5;
-    uint64 time_limit = 6;
-    uint64 memory_limit = 7;
+    string time_limit = 6;
+    string memory_limit = 7;
 }
 message CreateProblemResponse { Problem problem = 1; }
 message GetProblemListRequest {
@@ -195,8 +195,8 @@ message UpdateProblemRequest {
     uint64 id = 1;
     string display_name = 2;
     string description = 3;
-    uint64 time_limit = 4;
-    uint64 memory_limit = 5;
+    string time_limit = 4;
+    string memory_limit = 5;
 }
 message UpdateProblemResponse { Problem problem = 1; }
 message DeleteProblemRequest { uint64 id = 1; }
