@@ -11,24 +11,74 @@ import (
 )
 
 var (
-	version    string = "0"
-	commitHash string = "0"
+	version    string
+	commitHash string
 )
 
 const (
 	flagConfigFilePath = "config-file-path"
 )
 
-func server() *cobra.Command {
+func standaloneServer() *cobra.Command {
 	command := &cobra.Command{
-		Use: "server",
+		Use: "standalone-server",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			configFilePath, err := cmd.Flags().GetString(flagConfigFilePath)
 			if err != nil {
 				return err
 			}
 
-			app, cleanup, err := wiring.InitializeAppServer(configs.ConfigFilePath(configFilePath), utils.Arguments{})
+			app, cleanup, err := wiring.InitializeStandaloneServer(configs.ConfigFilePath(configFilePath), utils.Arguments{})
+			if err != nil {
+				return err
+			}
+			defer cleanup()
+
+			app.Start()
+			return nil
+		},
+	}
+
+	command.Flags().String(flagConfigFilePath, "", "If provided, will use the provided config file")
+
+	return command
+}
+
+func httpServer() *cobra.Command {
+	command := &cobra.Command{
+		Use: "http-server",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			configFilePath, err := cmd.Flags().GetString(flagConfigFilePath)
+			if err != nil {
+				return err
+			}
+
+			app, cleanup, err := wiring.InitializeHTTPServer(configs.ConfigFilePath(configFilePath), utils.Arguments{})
+			if err != nil {
+				return err
+			}
+			defer cleanup()
+
+			app.Start()
+			return nil
+		},
+	}
+
+	command.Flags().String(flagConfigFilePath, "", "If provided, will use the provided config file")
+
+	return command
+}
+
+func worker() *cobra.Command {
+	command := &cobra.Command{
+		Use: "worker",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			configFilePath, err := cmd.Flags().GetString(flagConfigFilePath)
+			if err != nil {
+				return err
+			}
+
+			app, cleanup, err := wiring.InitializeWorker(configs.ConfigFilePath(configFilePath), utils.Arguments{})
 			if err != nil {
 				return err
 			}
@@ -49,7 +99,9 @@ func main() {
 		Version: fmt.Sprintf("%s-%s", version, commitHash),
 	}
 	rootCommand.AddCommand(
-		server(),
+		standaloneServer(),
+		httpServer(),
+		worker(),
 	)
 
 	if err := rootCommand.Execute(); err != nil {

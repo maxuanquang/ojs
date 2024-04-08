@@ -6,12 +6,12 @@ package wiring
 
 import (
 	"github.com/google/wire"
+	"github.com/maxuanquang/ojs/internal/app"
 	"github.com/maxuanquang/ojs/internal/configs"
 	"github.com/maxuanquang/ojs/internal/dataaccess"
 	"github.com/maxuanquang/ojs/internal/handler"
 	"github.com/maxuanquang/ojs/internal/logic"
 	"github.com/maxuanquang/ojs/internal/utils"
-	"github.com/maxuanquang/ojs/internal/app"
 )
 
 var WireSet = wire.NewSet(
@@ -23,8 +23,20 @@ var WireSet = wire.NewSet(
 	app.WireSet,
 )
 
-func InitializeAppServer(configFilePath configs.ConfigFilePath, appArguments utils.Arguments) (app.Server, func(), error) {
+func InitializeStandaloneServer(configFilePath configs.ConfigFilePath, appArguments utils.Arguments) (app.StandaloneServer, func(), error) {
 	wire.Build(WireSet)
 
-	return app.Server{}, nil, nil
+	return app.StandaloneServer{}, nil, nil
+}
+
+func InitializeHTTPServer(configFilePath configs.ConfigFilePath, appArguments utils.Arguments) (app.HTTPServer, func(), error) {
+	wire.Build(WireSet)
+
+	return app.HTTPServer{}, nil, nil
+}
+
+func InitializeWorker(configFilePath configs.ConfigFilePath, appArguments utils.Arguments) (app.Worker, func(), error) {
+	wire.Build(WireSet)
+
+	return app.Worker{}, nil, nil
 }

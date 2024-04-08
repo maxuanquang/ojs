@@ -6,6 +6,7 @@ import (
 
 	"github.com/IBM/sarama"
 	"github.com/maxuanquang/ojs/internal/configs"
+	"github.com/maxuanquang/ojs/internal/dataaccess/mq/admin"
 	"github.com/maxuanquang/ojs/internal/utils"
 	"go.uber.org/zap"
 )
@@ -14,7 +15,13 @@ type Client interface {
 	Produce(ctx context.Context, queueName string, payload []byte) error
 }
 
-func NewClient(mqConfig configs.MQ, logger *zap.Logger) (Client, error) {
+func NewClient(mqConfig configs.MQ, logger *zap.Logger, admin admin.Admin) (Client, error) {
+	err := admin.Setup(context.Background())
+	if err != nil {
+		logger.With(zap.Error(err)).Error("failed to setup kafka broker")
+		return nil, err
+	}
+
 	producer, err := sarama.NewSyncProducer(mqConfig.Addresses, newSaramaConfig(mqConfig))
 	if err != nil {
 		return nil, fmt.Errorf("failed to create sarama sync producer: %w", err)

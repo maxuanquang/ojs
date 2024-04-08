@@ -1,3 +1,7 @@
+VERSION := 1.0.0
+COMMIT_HASH := $(shell git rev-parse HEAD)
+PROJECT_NAME := ojs
+
 .PHONY: database
 database:
 	docker run --name mysql -d -p 3306:3306 -e MYSQL_ROOT_PASSWORD=secret -e MYSQL_DATABASE=ojs mysql:8.3.0 --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
@@ -30,18 +34,51 @@ proto:
 wire:
 	wire ./internal/wiring/wire.go
 
+.PHONY: openapi
+openapi:
+	openapi-generator-cli generate \
+		-i api/v1/ojs.swagger.json \
+		-g javascript \
+		-o web/src/api
+
 .PHONY: generate
 generate:
 	make proto
 	make wire
+	make openapi
 
 .PHONY: tidy
 tidy:
 	go mod tidy
 
-.PHONY: server
-server:
-	go run ./cmd/ojs/main.go server
+.PHONY: build-web
+build-web:
+	cd web/src/api && npm install && cd ../../../
+	cd web && npm install && npm run build && cd ..
+
+.PHONY: build-backend
+build-backend:
+	go build \
+		-ldflags "-X main.version=$(VERSION) -X main.commitHash=$(COMMIT_HASH)" \
+		-o build/$(PROJECT_NAME) \
+		cmd/$(PROJECT_NAME)/*.go
+
+.PHONY: build
+build:
+	make build-web
+	make build-backend
+
+.PHONY: standalone-server
+standalone-server:
+	go run ./cmd/ojs/main.go standalone-server
+
+.PHONY: http-server
+http-server:
+	go run ./cmd/ojs/main.go http-server
+
+.PHONY: worker
+worker:
+	go run ./cmd/ojs/main.go worker
 
 .PHONY: docker-compose-dev-up
 docker-compose-dev-up:
@@ -50,3 +87,15 @@ docker-compose-dev-up:
 .PHONY: docker-compose-dev-down
 docker-compose-dev-down:
 	docker compose -f ./internal/deployments/docker-compose.dev.yml down
+
+.PHONY: docker-compose-prod-up
+docker-compose-prod-up:
+	docker compose -f ./internal/deployments/docker-compose.prod.yml up -d
+
+.PHONY: docker-compose-prod-down
+docker-compose-prod-down:
+	docker compose -f ./internal/deployments/docker-compose.prod.yml down
+
+.PHONY: run
+run:
+	./build/ojs standalone-server

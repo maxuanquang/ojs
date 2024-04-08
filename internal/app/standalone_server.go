@@ -11,20 +11,20 @@ import (
 	"go.uber.org/zap"
 )
 
-type Server struct {
+type StandaloneServer struct {
 	grpcServer grpc.Server
 	httpServer http.Server
 	mqConsumer consumer.RootConsumer
 	logger     *zap.Logger
 }
 
-func NewServer(
+func NewStandaloneServer(
 	grpcServer grpc.Server,
 	httpServer http.Server,
 	mqConsumer consumer.RootConsumer,
 	logger *zap.Logger,
-) (Server, error) {
-	return Server{
+) (StandaloneServer, error) {
+	return StandaloneServer{
 		grpcServer: grpcServer,
 		httpServer: httpServer,
 		mqConsumer: mqConsumer,
@@ -32,7 +32,7 @@ func NewServer(
 	}, nil
 }
 
-func (s *Server) Start() {
+func (s *StandaloneServer) Start() {
 
 	go func() {
 		err := s.grpcServer.Start(context.Background())

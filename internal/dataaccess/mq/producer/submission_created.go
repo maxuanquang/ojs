@@ -9,7 +9,7 @@ import (
 )
 
 const (
-	MessageQueueSubmissionCreated = "submisson_created"
+	MessageQueueSubmissionCreated = "submission_created"
 )
 
 type SubmissionCreatedProducer interface {

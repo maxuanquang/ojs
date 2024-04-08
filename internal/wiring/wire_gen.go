@@ -13,6 +13,7 @@ import (
 	"github.com/maxuanquang/ojs/internal/dataaccess"
 	"github.com/maxuanquang/ojs/internal/dataaccess/cache"
 	"github.com/maxuanquang/ojs/internal/dataaccess/database"
+	"github.com/maxuanquang/ojs/internal/dataaccess/mq/admin"
 	consumer2 "github.com/maxuanquang/ojs/internal/dataaccess/mq/consumer"
 	"github.com/maxuanquang/ojs/internal/dataaccess/mq/producer"
 	"github.com/maxuanquang/ojs/internal/handler"
@@ -25,22 +26,22 @@ import (
 
 // Injectors from wire.go:
 
-func InitializeAppServer(configFilePath configs.ConfigFilePath, appArguments utils.Arguments) (app.Server, func(), error) {
+func InitializeStandaloneServer(configFilePath configs.ConfigFilePath, appArguments utils.Arguments) (app.StandaloneServer, func(), error) {
 	config, err := configs.NewConfig(configFilePath)
 	if err != nil {
-		return app.Server{}, nil, err
+		return app.StandaloneServer{}, nil, err
 	}
 	configsGRPC := config.GRPC
 	configsDatabase := config.Database
 	databaseDatabase, cleanup, err := database.InitializeDB(configsDatabase)
 	if err != nil {
-		return app.Server{}, nil, err
+		return app.StandaloneServer{}, nil, err
 	}
 	log := config.Log
 	logger, cleanup2, err := utils.InitializeLogger(log)
 	if err != nil {
 		cleanup()
-		return app.Server{}, nil, err
+		return app.StandaloneServer{}, nil, err
 	}
 	accountDataAccessor := database.NewAccountDataAccessor(databaseDatabase, logger)
 	accountPasswordDataAccessor := database.NewAccountPasswordDataAccessor(databaseDatabase, logger)
@@ -50,32 +51,32 @@ func InitializeAppServer(configFilePath configs.ConfigFilePath, appArguments uti
 	if err != nil {
 		cleanup2()
 		cleanup()
-		return app.Server{}, nil, err
+		return app.StandaloneServer{}, nil, err
 	}
 	configsCache := config.Cache
 	client, err := cache.NewClient(configsCache, logger)
 	if err != nil {
 		cleanup2()
 		cleanup()
-		return app.Server{}, nil, err
+		return app.StandaloneServer{}, nil, err
 	}
 	tokenPublicKey, err := cache.NewTokenPublicKey(client)
 	if err != nil {
 		cleanup2()
 		cleanup()
-		return app.Server{}, nil, err
+		return app.StandaloneServer{}, nil, err
 	}
 	tokenLogic, err := logic.NewTokenLogic(accountDataAccessor, tokenPublicKeyDataAccessor, logger, auth, tokenPublicKey)
 	if err != nil {
 		cleanup2()
 		cleanup()
-		return app.Server{}, nil, err
+		return app.StandaloneServer{}, nil, err
 	}
 	takenAccountName, err := cache.NewTakenAccountName(client)
 	if err != nil {
 		cleanup2()
 		cleanup()
-		return app.Server{}, nil, err
+		return app.StandaloneServer{}, nil, err
 	}
 	accountLogic := logic.NewAccountLogic(databaseDatabase, accountDataAccessor, accountPasswordDataAccessor, hashLogic, tokenLogic, takenAccountName, logger)
 	problemDataAccessor := database.NewProblemDataAccessor(databaseDatabase, logger)
@@ -86,27 +87,33 @@ func InitializeAppServer(configFilePath configs.ConfigFilePath, appArguments uti
 	if err != nil {
 		cleanup2()
 		cleanup()
-		return app.Server{}, nil, err
+		return app.StandaloneServer{}, nil, err
 	}
 	judge := config.Judge
 	judgeLogic, err := logic.NewJudgeLogic(problemDataAccessor, submissionDataAccessor, testCaseDataAccessor, clientClient, judge, appArguments, logger)
 	if err != nil {
 		cleanup2()
 		cleanup()
-		return app.Server{}, nil, err
+		return app.StandaloneServer{}, nil, err
 	}
 	mq := config.MQ
-	producerClient, err := producer.NewClient(mq, logger)
+	adminAdmin, err := admin.NewAdmin(logger, mq)
 	if err != nil {
 		cleanup2()
 		cleanup()
-		return app.Server{}, nil, err
+		return app.StandaloneServer{}, nil, err
+	}
+	producerClient, err := producer.NewClient(mq, logger, adminAdmin)
+	if err != nil {
+		cleanup2()
+		cleanup()
+		return app.StandaloneServer{}, nil, err
 	}
 	submissionCreatedProducer, err := producer.NewSubmissionCreatedProducer(producerClient, logger)
 	if err != nil {
 		cleanup2()
 		cleanup()
-		return app.Server{}, nil, err
+		return app.StandaloneServer{}, nil, err
 	}
 	submissionLogic := logic.NewSubmissionLogic(logger, accountDataAccessor, problemDataAccessor, submissionDataAccessor, testCaseDataAccessor, tokenLogic, judgeLogic, submissionCreatedProducer, databaseDatabase)
 	testCaseLogic := logic.NewTestCaseLogic(logger, accountDataAccessor, problemDataAccessor, submissionDataAccessor, testCaseDataAccessor, tokenLogic)
@@ -118,22 +125,233 @@ func InitializeAppServer(configFilePath configs.ConfigFilePath, appArguments uti
 	if err != nil {
 		cleanup2()
 		cleanup()
-		return app.Server{}, nil, err
+		return app.StandaloneServer{}, nil, err
 	}
 	consumerConsumer, err := consumer2.NewConsumer(mq, logger)
 	if err != nil {
 		cleanup2()
 		cleanup()
-		return app.Server{}, nil, err
+		return app.StandaloneServer{}, nil, err
 	}
 	rootConsumer := consumer.NewRootConsumer(submissionCreatedHandler, consumerConsumer, logger)
-	appServer, err := app.NewServer(server, httpServer, rootConsumer, logger)
+	standaloneServer, err := app.NewStandaloneServer(server, httpServer, rootConsumer, logger)
 	if err != nil {
 		cleanup2()
 		cleanup()
-		return app.Server{}, nil, err
+		return app.StandaloneServer{}, nil, err
 	}
-	return appServer, func() {
+	return standaloneServer, func() {
+		cleanup2()
+		cleanup()
+	}, nil
+}
+
+func InitializeHTTPServer(configFilePath configs.ConfigFilePath, appArguments utils.Arguments) (app.HTTPServer, func(), error) {
+	config, err := configs.NewConfig(configFilePath)
+	if err != nil {
+		return app.HTTPServer{}, nil, err
+	}
+	configsGRPC := config.GRPC
+	configsDatabase := config.Database
+	databaseDatabase, cleanup, err := database.InitializeDB(configsDatabase)
+	if err != nil {
+		return app.HTTPServer{}, nil, err
+	}
+	log := config.Log
+	logger, cleanup2, err := utils.InitializeLogger(log)
+	if err != nil {
+		cleanup()
+		return app.HTTPServer{}, nil, err
+	}
+	accountDataAccessor := database.NewAccountDataAccessor(databaseDatabase, logger)
+	accountPasswordDataAccessor := database.NewAccountPasswordDataAccessor(databaseDatabase, logger)
+	auth := config.Auth
+	hashLogic := logic.NewHashLogic(auth)
+	tokenPublicKeyDataAccessor, err := database.NewTokenPublicKeyDataAccessor(databaseDatabase, logger)
+	if err != nil {
+		cleanup2()
+		cleanup()
+		return app.HTTPServer{}, nil, err
+	}
+	configsCache := config.Cache
+	client, err := cache.NewClient(configsCache, logger)
+	if err != nil {
+		cleanup2()
+		cleanup()
+		return app.HTTPServer{}, nil, err
+	}
+	tokenPublicKey, err := cache.NewTokenPublicKey(client)
+	if err != nil {
+		cleanup2()
+		cleanup()
+		return app.HTTPServer{}, nil, err
+	}
+	tokenLogic, err := logic.NewTokenLogic(accountDataAccessor, tokenPublicKeyDataAccessor, logger, auth, tokenPublicKey)
+	if err != nil {
+		cleanup2()
+		cleanup()
+		return app.HTTPServer{}, nil, err
+	}
+	takenAccountName, err := cache.NewTakenAccountName(client)
+	if err != nil {
+		cleanup2()
+		cleanup()
+		return app.HTTPServer{}, nil, err
+	}
+	accountLogic := logic.NewAccountLogic(databaseDatabase, accountDataAccessor, accountPasswordDataAccessor, hashLogic, tokenLogic, takenAccountName, logger)
+	problemDataAccessor := database.NewProblemDataAccessor(databaseDatabase, logger)
+	submissionDataAccessor := database.NewSubmissionDataAccessor(databaseDatabase, logger)
+	testCaseDataAccessor := database.NewTestCaseDataAccessor(databaseDatabase, logger)
+	problemLogic := logic.NewProblemLogic(logger, accountDataAccessor, problemDataAccessor, submissionDataAccessor, testCaseDataAccessor, tokenLogic)
+	clientClient, err := utils.InitializeDockerClient()
+	if err != nil {
+		cleanup2()
+		cleanup()
+		return app.HTTPServer{}, nil, err
+	}
+	judge := config.Judge
+	judgeLogic, err := logic.NewJudgeLogic(problemDataAccessor, submissionDataAccessor, testCaseDataAccessor, clientClient, judge, appArguments, logger)
+	if err != nil {
+		cleanup2()
+		cleanup()
+		return app.HTTPServer{}, nil, err
+	}
+	mq := config.MQ
+	adminAdmin, err := admin.NewAdmin(logger, mq)
+	if err != nil {
+		cleanup2()
+		cleanup()
+		return app.HTTPServer{}, nil, err
+	}
+	producerClient, err := producer.NewClient(mq, logger, adminAdmin)
+	if err != nil {
+		cleanup2()
+		cleanup()
+		return app.HTTPServer{}, nil, err
+	}
+	submissionCreatedProducer, err := producer.NewSubmissionCreatedProducer(producerClient, logger)
+	if err != nil {
+		cleanup2()
+		cleanup()
+		return app.HTTPServer{}, nil, err
+	}
+	submissionLogic := logic.NewSubmissionLogic(logger, accountDataAccessor, problemDataAccessor, submissionDataAccessor, testCaseDataAccessor, tokenLogic, judgeLogic, submissionCreatedProducer, databaseDatabase)
+	testCaseLogic := logic.NewTestCaseLogic(logger, accountDataAccessor, problemDataAccessor, submissionDataAccessor, testCaseDataAccessor, tokenLogic)
+	ojsServiceServer := grpc.NewHandler(accountLogic, problemLogic, submissionLogic, testCaseLogic)
+	server := grpc.NewServer(configsGRPC, ojsServiceServer)
+	configsHTTP := config.HTTP
+	httpServer := http.NewServer(configsHTTP, configsGRPC, auth, logger)
+	appHTTPServer, err := app.NewHTTPServer(server, httpServer, logger)
+	if err != nil {
+		cleanup2()
+		cleanup()
+		return app.HTTPServer{}, nil, err
+	}
+	return appHTTPServer, func() {
+		cleanup2()
+		cleanup()
+	}, nil
+}
+
+func InitializeWorker(configFilePath configs.ConfigFilePath, appArguments utils.Arguments) (app.Worker, func(), error) {
+	config, err := configs.NewConfig(configFilePath)
+	if err != nil {
+		return app.Worker{}, nil, err
+	}
+	log := config.Log
+	logger, cleanup, err := utils.InitializeLogger(log)
+	if err != nil {
+		return app.Worker{}, nil, err
+	}
+	configsDatabase := config.Database
+	databaseDatabase, cleanup2, err := database.InitializeDB(configsDatabase)
+	if err != nil {
+		cleanup()
+		return app.Worker{}, nil, err
+	}
+	accountDataAccessor := database.NewAccountDataAccessor(databaseDatabase, logger)
+	problemDataAccessor := database.NewProblemDataAccessor(databaseDatabase, logger)
+	submissionDataAccessor := database.NewSubmissionDataAccessor(databaseDatabase, logger)
+	testCaseDataAccessor := database.NewTestCaseDataAccessor(databaseDatabase, logger)
+	tokenPublicKeyDataAccessor, err := database.NewTokenPublicKeyDataAccessor(databaseDatabase, logger)
+	if err != nil {
+		cleanup2()
+		cleanup()
+		return app.Worker{}, nil, err
+	}
+	auth := config.Auth
+	configsCache := config.Cache
+	client, err := cache.NewClient(configsCache, logger)
+	if err != nil {
+		cleanup2()
+		cleanup()
+		return app.Worker{}, nil, err
+	}
+	tokenPublicKey, err := cache.NewTokenPublicKey(client)
+	if err != nil {
+		cleanup2()
+		cleanup()
+		return app.Worker{}, nil, err
+	}
+	tokenLogic, err := logic.NewTokenLogic(accountDataAccessor, tokenPublicKeyDataAccessor, logger, auth, tokenPublicKey)
+	if err != nil {
+		cleanup2()
+		cleanup()
+		return app.Worker{}, nil, err
+	}
+	clientClient, err := utils.InitializeDockerClient()
+	if err != nil {
+		cleanup2()
+		cleanup()
+		return app.Worker{}, nil, err
+	}
+	judge := config.Judge
+	judgeLogic, err := logic.NewJudgeLogic(problemDataAccessor, submissionDataAccessor, testCaseDataAccessor, clientClient, judge, appArguments, logger)
+	if err != nil {
+		cleanup2()
+		cleanup()
+		return app.Worker{}, nil, err
+	}
+	mq := config.MQ
+	adminAdmin, err := admin.NewAdmin(logger, mq)
+	if err != nil {
+		cleanup2()
+		cleanup()
+		return app.Worker{}, nil, err
+	}
+	producerClient, err := producer.NewClient(mq, logger, adminAdmin)
+	if err != nil {
+		cleanup2()
+		cleanup()
+		return app.Worker{}, nil, err
+	}
+	submissionCreatedProducer, err := producer.NewSubmissionCreatedProducer(producerClient, logger)
+	if err != nil {
+		cleanup2()
+		cleanup()
+		return app.Worker{}, nil, err
+	}
+	submissionLogic := logic.NewSubmissionLogic(logger, accountDataAccessor, problemDataAccessor, submissionDataAccessor, testCaseDataAccessor, tokenLogic, judgeLogic, submissionCreatedProducer, databaseDatabase)
+	submissionCreatedHandler, err := consumer.NewSubmissionCreatedHandler(submissionLogic, logger)
+	if err != nil {
+		cleanup2()
+		cleanup()
+		return app.Worker{}, nil, err
+	}
+	consumerConsumer, err := consumer2.NewConsumer(mq, logger)
+	if err != nil {
+		cleanup2()
+		cleanup()
+		return app.Worker{}, nil, err
+	}
+	rootConsumer := consumer.NewRootConsumer(submissionCreatedHandler, consumerConsumer, logger)
+	worker, err := app.NewWorker(rootConsumer, logger)
+	if err != nil {
+		cleanup2()
+		cleanup()
+		return app.Worker{}, nil, err
+	}
+	return worker, func() {
 		cleanup2()
 		cleanup()
 	}, nil

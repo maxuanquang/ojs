@@ -26,6 +26,9 @@ http:
 mq:
   addresses: ["0.0.0.0:9092"]
   client_id: "1"
+  consumer_group_id: "ojs"
+  topic: "submission_created"
+  num_partitions: 2
 judge:
   languages:
     - value: c
