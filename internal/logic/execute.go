@@ -104,6 +104,7 @@ func (e *executeLogic) Execute(ctx context.Context, programFilePath string, prog
 	hostWorkingDir := filepath.Dir(programFilePath)
 	programFileName := filepath.Base(programFilePath)
 
+	// // TODO: Handle cleanup
 	// defer func() {
 	// 	if err := os.RemoveAll(hostWorkingDir); err != nil {
 	// 		e.logger.With(zap.Error(err)).Error("failed to remove temp dir")

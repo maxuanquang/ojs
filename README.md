@@ -34,26 +34,48 @@ Docker or a Docker-compatible container runtime must be installed locally to run
 
 ### Install
 
+To install OJS, follow these steps:
+
+1. Clone the repository:
+
 ```bash
 git clone https://github.com/maxuanquang/ojs.git
 ```
 
+2. Navigate to the project directory:
+
 ```bash
-cd ojs
+cd idm
 ```
+
+3. Build project:
 
 ```bash
 make build
 ```
 
+4. Start all necessary services:
+
+```bash
+make docker-compose-prod-up
+```
+
+5. After all services have started up, we can start the project:
+
+```bash
+make run
+```
+
+By default, the HTTP server serves at `http:localhost:8081`
+
 ## Usage
 
 ### Running in local mode
 
-To run OJS as a standalone server
+To run OJS as a standalone server:
 
 ```bash
-make server
+ojs standalone-server
 ```
 
 ### Running in distributed mode
@@ -61,23 +83,21 @@ make server
 To start HTTP host server:
 
 ```bash
-ojs --host
+ojs http-server
 ```
 
-To start worker processes for evaluating submissions:
+To start a worker process for evaluating submissions:
 
 ```bash
-ojs --distributed \
-  --worker \
-  --host-address <address of http host>
+ojs worker
 ```
 
 ## Config
 
 ### CLI Arguments
 
-| Argument                    | Description                                                                                                                                                                                                  | Default Value           |
-| --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------- |
+| Argument | Description | Default Value |
+| -------- | ----------- | ------------- |
 | `--pull-image-at-startup`   | Whether to pull Docker images necessary for compiling and executing test case at startup. If set to true and Docker fails to pull any of the provided image, the program will exit with non-zero error code. | `true`                  |
 
 ### Config files

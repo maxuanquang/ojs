@@ -76,6 +76,7 @@ func (c *consumer) Start(ctx context.Context) error {
 
 func newSaramaConfig(_ configs.MQ) *sarama.Config {
 	config := sarama.NewConfig()
+	config.Consumer.Offsets.Initial = sarama.OffsetNewest
 	config.ClientID = consumerClientID
 	config.Metadata.Full = true
 	return config

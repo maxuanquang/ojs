@@ -40,7 +40,7 @@ func (d *submissionCreatedHandler) Handle(ctx context.Context, submissionID uint
 	)
 	if err != nil {
 		logger.With(zap.Error(err)).Error("failed to execute submission")
-		return err
+		// return err
 	}
 
 	return nil
