@@ -121,5 +121,6 @@ func (j *judgeLogic) Judge(ctx context.Context, submission Submission) (ojs.Subm
 		}
 	}
 
+	j.logger.Info("submission passed all test cases")
 	return ojs.SubmissionResult_OK, nil
 }

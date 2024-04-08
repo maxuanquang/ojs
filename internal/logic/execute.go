@@ -5,7 +5,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"os"
 	"path/filepath"
 	"time"
 
@@ -105,11 +104,11 @@ func (e *executeLogic) Execute(ctx context.Context, programFilePath string, prog
 	hostWorkingDir := filepath.Dir(programFilePath)
 	programFileName := filepath.Base(programFilePath)
 
-	defer func() {
-		if err := os.RemoveAll(hostWorkingDir); err != nil {
-			e.logger.With(zap.Error(err)).Error("failed to remove temp dir")
-		}
-	}()
+	// defer func() {
+	// 	if err := os.RemoveAll(hostWorkingDir); err != nil {
+	// 		e.logger.With(zap.Error(err)).Error("failed to remove temp dir")
+	// 	}
+	// }()
 
 	containerWorkingDir := hostWorkingDir
 	containerProgramFilePath := filepath.Join(containerWorkingDir, programFileName)
