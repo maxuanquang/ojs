@@ -7,6 +7,7 @@ import (
 	"github.com/maxuanquang/ojs/internal/dataaccess/database"
 	"github.com/maxuanquang/ojs/internal/dataaccess/mq/producer"
 	"github.com/maxuanquang/ojs/internal/generated/grpc/ojs"
+	"github.com/mikespook/gorbac"
 	"go.uber.org/zap"
 	"gorm.io/gorm"
 )
@@ -29,6 +30,7 @@ func NewSubmissionLogic(
 	testCaseDataAccessor database.TestCaseDataAccessor,
 	tokenLogic TokenLogic,
 	judgeLogic JudgeLogic,
+	roleLogic RoleLogic,
 	submissionCreatedProducer producer.SubmissionCreatedProducer,
 	database database.Database,
 ) SubmissionLogic {
@@ -40,6 +42,7 @@ func NewSubmissionLogic(
 		testCaseDataAccessor:      testCaseDataAccessor,
 		tokenLogic:                tokenLogic,
 		judgeLogic:                judgeLogic,
+		roleLogic:                 roleLogic,
 		submissionCreatedProducer: submissionCreatedProducer,
 		database:                  database,
 	}
@@ -53,30 +56,42 @@ type submissionLogic struct {
 	testCaseDataAccessor      database.TestCaseDataAccessor
 	tokenLogic                TokenLogic
 	judgeLogic                JudgeLogic
+	roleLogic                 RoleLogic
 	submissionCreatedProducer producer.SubmissionCreatedProducer
 	database                  database.Database
 }
 
 func (p *submissionLogic) CreateSubmission(ctx context.Context, in CreateSubmissionInput) (CreateSubmissionOutput, error) {
 	var (
-		err               error
-		createdSubmission database.Submission
-		txErr             error
-		accountID         uint64
+		err                   error
+		createdSubmission     database.Submission
+		txErr                 error
+		requestingAccountID   uint64
+		requestingAccountRole int8
 	)
 
 	// Verify token
-	accountID, _, _, _, err = p.tokenLogic.VerifyTokenString(ctx, in.Token)
+	requestingAccountID, _, requestingAccountRole, _, err = p.tokenLogic.VerifyTokenString(ctx, in.Token)
 	if err != nil {
 		p.logger.Error("Failed to verify token", zap.Error(err))
-		return CreateSubmissionOutput{}, err
+		return CreateSubmissionOutput{}, ErrTokenInvalid
+	}
+
+	requiredPermissions := []gorbac.Permission{PermissionSubmissionsWriteSelf}
+	hasPermission, err := p.roleLogic.AccountHasPermission(ctx, ojs.Role_name[int32(requestingAccountRole)], requiredPermissions...)
+	if err != nil {
+		p.logger.Error("failed to check permission", zap.Error(err))
+		return CreateSubmissionOutput{}, ErrInternal
+	}
+	if !hasPermission {
+		return CreateSubmissionOutput{}, ErrPermissionDenied
 	}
 
 	// Create submission in the database
 	txErr = p.database.Transaction(func(tx *gorm.DB) error {
 		createdSubmission, err = p.submissionDataAccessor.WithDatabaseTransaction(tx).CreateSubmission(ctx, database.Submission{
 			OfProblemID: in.OfProblemID,
-			AuthorID:    accountID,
+			AuthorID:    requestingAccountID,
 			Content:     in.Content,
 			Language:    in.Language,
 			Status:      int8(ojs.SubmissionStatus_Submitted),
@@ -120,16 +135,28 @@ func (p *submissionLogic) GetSubmission(ctx context.Context, in GetSubmissionInp
 		return GetSubmissionOutput{}, err
 	}
 
+	requestingAccountID, _, requestingAccountRole, _, err := p.tokenLogic.VerifyTokenString(ctx, in.Token)
+	if err != nil {
+		p.logger.Error("Failed to verify token", zap.Error(err))
+		return GetSubmissionOutput{}, ErrTokenInvalid
+	}
+
+	requiredPermissions := []gorbac.Permission{PermissionSubmissionsReadAll}
+	if submission.AuthorID == requestingAccountID {
+		requiredPermissions = []gorbac.Permission{PermissionSubmissionsReadSelf}
+	}
+
+	hasPermission, err := p.roleLogic.AccountHasPermission(ctx, ojs.Role_name[int32(requestingAccountRole)], requiredPermissions...)
+	if err != nil {
+		p.logger.Error("failed to check permission", zap.Error(err))
+		return GetSubmissionOutput{}, ErrInternal
+	}
+	if !hasPermission {
+		return GetSubmissionOutput{}, ErrPermissionDenied
+	}
+
 	return GetSubmissionOutput{
-		Submission: Submission{
-			ID:          submission.ID,
-			OfProblemID: submission.OfProblemID,
-			AuthorID:    submission.AuthorID,
-			Content:     submission.Content,
-			Language:    submission.Language,
-			Status:      ojs.SubmissionStatus(submission.Status),
-			Result:      ojs.SubmissionResult(submission.Result),
-		},
+		Submission: p.dbSubmissionToLogicSubmission(submission),
 	}, nil
 }
 
@@ -139,6 +166,22 @@ func (p *submissionLogic) GetSubmissionList(ctx context.Context, in GetSubmissio
 	if err != nil {
 		p.logger.Error("Failed to get submission list", zap.Error(err))
 		return GetSubmissionListOutput{}, err
+	}
+
+	_, _, requestingAccountRole, _, err := p.tokenLogic.VerifyTokenString(ctx, in.Token)
+	if err != nil {
+		p.logger.With(zap.Error(err)).Error("failed to verify token")
+		return GetSubmissionListOutput{}, ErrTokenInvalid
+	}
+
+	requiredPermissions := []gorbac.Permission{PermissionSubmissionsReadAll}
+	hasPermission, err := p.roleLogic.AccountHasPermission(ctx, ojs.Role_name[int32(requestingAccountRole)], requiredPermissions...)
+	if err != nil {
+		p.logger.Error("failed to check permission", zap.Error(err))
+		return GetSubmissionListOutput{}, ErrInternal
+	}
+	if !hasPermission {
+		return GetSubmissionListOutput{}, ErrPermissionDenied
 	}
 
 	var submissionList []Submission
@@ -168,10 +211,20 @@ func (p *submissionLogic) GetSubmissionList(ctx context.Context, in GetSubmissio
 
 func (p *submissionLogic) GetAccountProblemSubmissionList(ctx context.Context, in GetAccountProblemSubmissionListInput) (GetAccountProblemSubmissionListOutput, error) {
 	// Verify token
-	accountID, _, _, _, err := p.tokenLogic.VerifyTokenString(ctx, in.Token)
+	accountID, _, accountRole, _, err := p.tokenLogic.VerifyTokenString(ctx, in.Token)
 	if err != nil {
 		p.logger.Error("Failed to verify token", zap.Error(err))
 		return GetAccountProblemSubmissionListOutput{}, err
+	}
+
+	requiredPermissions := []gorbac.Permission{PermissionSubmissionsReadAll, PermissionSubmissionsReadSelf}
+	hasPermission, err := p.roleLogic.AccountHasPermission(ctx, ojs.Role_name[int32(accountRole)], requiredPermissions...)
+	if err != nil {
+		p.logger.Error("failed to check permission", zap.Error(err))
+		return GetAccountProblemSubmissionListOutput{}, ErrInternal
+	}
+	if !hasPermission {
+		return GetAccountProblemSubmissionListOutput{}, ErrPermissionDenied
 	}
 
 	// Retrieve account's submission list for a specific problem from the database
@@ -207,6 +260,22 @@ func (p *submissionLogic) GetAccountProblemSubmissionList(ctx context.Context, i
 }
 
 func (p *submissionLogic) GetProblemSubmissionList(ctx context.Context, in GetProblemSubmissionListInput) (GetProblemSubmissionListOutput, error) {
+	_, _, accountRole, _, err := p.tokenLogic.VerifyTokenString(ctx, in.Token)
+	if err != nil {
+		p.logger.Error("Failed to verify token", zap.Error(err))
+		return GetProblemSubmissionListOutput{}, err
+	}
+
+	requiredPermissions := []gorbac.Permission{PermissionSubmissionsReadAll}
+	hasPermission, err := p.roleLogic.AccountHasPermission(ctx, ojs.Role_name[int32(accountRole)], requiredPermissions...)
+	if err != nil {
+		p.logger.With(zap.Error(err)).Error("failed to check permission")
+		return GetProblemSubmissionListOutput{}, ErrInternal
+	}
+	if !hasPermission {
+		return GetProblemSubmissionListOutput{}, ErrPermissionDenied
+	}
+
 	// Retrieve problem's submission list from the database
 	submissions, err := p.submissionDataAccessor.GetProblemSubmissionList(ctx, in.OfProblemID, in.Offset, in.Limit)
 	if err != nil {
@@ -242,10 +311,27 @@ func (p *submissionLogic) GetProblemSubmissionList(ctx context.Context, in GetPr
 // ExecuteSubmission implements SubmissionLogic.
 func (s *submissionLogic) ExecuteSubmission(ctx context.Context, in ExecuteSubmissionInput) error {
 	var (
-		err        error
-		txErr      error
-		submission database.Submission
+		err         error
+		txErr       error
+		submission  database.Submission
+		accountRole int8
 	)
+
+	_, _, accountRole, _, err = s.tokenLogic.VerifyTokenString(ctx, in.Token)
+	if err != nil {
+		s.logger.Error("Failed to verify token", zap.Error(err))
+		return ErrInternal
+	}
+
+	requiredPermissions := []gorbac.Permission{PermissionSubmissionsReadAll, PermissionSubmissionsWriteAll}
+	hasPermission, err := s.roleLogic.AccountHasPermission(ctx, ojs.Role_name[int32(accountRole)], requiredPermissions...)
+	if err != nil {
+		s.logger.With(zap.Error(err)).Error("failed to check permission")
+		return ErrInternal
+	}
+	if !hasPermission {
+		return ErrPermissionDenied
+	}
 
 	txErr = s.database.Transaction(func(tx *gorm.DB) error {
 		submission, err = s.submissionDataAccessor.WithDatabaseTransaction(tx).GetSubmissionByID(ctx, in.ID)
@@ -275,7 +361,7 @@ func (s *submissionLogic) ExecuteSubmission(ctx context.Context, in ExecuteSubmi
 
 	result, err := s.judgeLogic.Judge(
 		ctx,
-		databaseSubmissionToLogicSubmission(submission),
+		s.dbSubmissionToLogicSubmission(submission),
 	)
 	if err != nil {
 		s.logger.Error("Failed to judge submission", zap.Error(err))
@@ -292,15 +378,15 @@ func (s *submissionLogic) ExecuteSubmission(ctx context.Context, in ExecuteSubmi
 	return nil
 }
 
-func databaseSubmissionToLogicSubmission(submission database.Submission) Submission {
+func (s *submissionLogic) dbSubmissionToLogicSubmission(dbSubmission database.Submission) Submission {
 	return Submission{
-		ID:          submission.ID,
-		OfProblemID: submission.OfProblemID,
-		AuthorID:    submission.AuthorID,
-		Content:     submission.Content,
-		Language:    submission.Language,
-		Status:      ojs.SubmissionStatus(submission.Status),
-		Result:      ojs.SubmissionResult(submission.Result),
+		ID:          dbSubmission.ID,
+		OfProblemID: dbSubmission.OfProblemID,
+		AuthorID:    dbSubmission.AuthorID,
+		Content:     dbSubmission.Content,
+		Language:    dbSubmission.Language,
+		Status:      ojs.SubmissionStatus(dbSubmission.Status),
+		Result:      ojs.SubmissionResult(dbSubmission.Result),
 	}
 }
 
@@ -326,7 +412,8 @@ type CreateSubmissionOutput struct {
 }
 
 type GetSubmissionInput struct {
-	ID uint64
+	ID    uint64
+	Token string
 }
 
 type GetSubmissionOutput struct {
@@ -336,6 +423,7 @@ type GetSubmissionOutput struct {
 type GetSubmissionListInput struct {
 	Offset uint64
 	Limit  uint64
+	Token  string
 }
 
 type GetSubmissionListOutput struct {
@@ -369,5 +457,6 @@ type GetProblemSubmissionListOutput struct {
 }
 
 type ExecuteSubmissionInput struct {
-	ID uint64
+	ID    uint64
+	Token string
 }

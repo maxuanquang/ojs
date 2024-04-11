@@ -5,15 +5,8 @@ import (
 
 	"github.com/maxuanquang/ojs/internal/dataaccess/database"
 	"github.com/maxuanquang/ojs/internal/generated/grpc/ojs"
+	"github.com/mikespook/gorbac"
 	"go.uber.org/zap"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
-)
-
-var (
-	ErrProblemNotFound  = status.Error(codes.NotFound, "problem not found")
-	ErrPermissionDenied = status.Error(codes.PermissionDenied, "permission denied")
-	ErrTestCaseNotFound = status.Error(codes.NotFound, "test case not found")
 )
 
 type ProblemLogic interface {
@@ -31,6 +24,7 @@ func NewProblemLogic(
 	submissionDataAccessor database.SubmissionDataAccessor,
 	testCaseDataAccessor database.TestCaseDataAccessor,
 	tokenLogic TokenLogic,
+	roleLogic RoleLogic,
 ) ProblemLogic {
 	return &problemLogic{
 		logger:                 logger,
@@ -39,6 +33,7 @@ func NewProblemLogic(
 		submissionDataAccessor: submissionDataAccessor,
 		testCaseDataAccessor:   testCaseDataAccessor,
 		tokenLogic:             tokenLogic,
+		roleLogic:              roleLogic,
 	}
 }
 
@@ -48,128 +43,186 @@ type problemLogic struct {
 	problemDataAccessor    database.ProblemDataAccessor
 	submissionDataAccessor database.SubmissionDataAccessor
 	testCaseDataAccessor   database.TestCaseDataAccessor
+	roleLogic              RoleLogic
 	tokenLogic             TokenLogic
 }
 
 func (p *problemLogic) CreateProblem(ctx context.Context, in CreateProblemInput) (CreateProblemOutput, error) {
 	logger := p.logger.With(zap.Any("create_problem_input", in))
 
-	account_id, _, _, _, err := p.tokenLogic.VerifyTokenString(ctx, in.Token)
+	requestingAccountID, requestingAccountName, requestingAccountRole, _, err := p.tokenLogic.VerifyTokenString(ctx, in.Token)
 	if err != nil {
 		logger.Error("failed to verify token", zap.Error(err))
-		return CreateProblemOutput{}, err
+		return CreateProblemOutput{}, ErrTokenInvalid
 	}
 
-	// Create the problem in the database
+	requiredPermissions := []gorbac.Permission{PermissionProblemsWriteAll, PermissionProblemsWriteSelf}
+	hasPermission, err := p.roleLogic.AccountHasPermission(ctx, ojs.Role_name[int32(requestingAccountRole)], requiredPermissions...)
+	if err != nil {
+		logger.Error("failed to check permission", zap.Error(err))
+		return CreateProblemOutput{}, ErrInternal
+	}
+	if !hasPermission {
+		return CreateProblemOutput{}, ErrPermissionDenied
+	}
+
 	createdProblem, err := p.problemDataAccessor.CreateProblem(ctx, database.Problem{
 		DisplayName: in.DisplayName,
 		Description: in.Description,
 		TimeLimit:   in.TimeLimit,
 		MemoryLimit: in.MemoryLimit,
-		AuthorID:    account_id,
+		AuthorID:    requestingAccountID,
 	})
 	if err != nil {
 		logger.Error("failed to create problem", zap.Error(err))
-		return CreateProblemOutput{}, err
+		return CreateProblemOutput{}, ErrInternal
 	}
 
 	return CreateProblemOutput{
-		Problem: Problem{
-			ID:          createdProblem.ID,
-			DisplayName: createdProblem.DisplayName,
-			AuthorId:    createdProblem.AuthorID,
-			Description: createdProblem.Description,
-			TimeLimit:   createdProblem.TimeLimit,
-			MemoryLimit: createdProblem.MemoryLimit,
-		},
+		Problem: p.dbProblemToLogicProblem(createdProblem, requestingAccountName),
 	}, nil
 }
 
 func (p *problemLogic) GetProblem(ctx context.Context, in GetProblemInput) (GetProblemOutput, error) {
 	logger := p.logger.With(zap.Any("get_problem_input", in))
 
-	// Retrieve the problem from the database
+	requestingAccountID, _, requestingAccountRole, _, err := p.tokenLogic.VerifyTokenString(ctx, in.Token)
+	if err != nil {
+		logger.Error("failed to verify token", zap.Error(err))
+		return GetProblemOutput{}, ErrTokenInvalid
+	}
+
+	requiredPermissions := []gorbac.Permission{PermissionProblemsReadAll}
+	if requestingAccountID == in.ID {
+		requiredPermissions = append(requiredPermissions, PermissionProblemsReadSelf)
+	}
+
+	hasPermission, err := p.roleLogic.AccountHasPermission(ctx, ojs.Role_name[int32(requestingAccountRole)], requiredPermissions...)
+	if err != nil {
+		logger.With(zap.Error(err)).Error("failed to check permission")
+		return GetProblemOutput{}, ErrInternal
+	}
+	if !hasPermission {
+		return GetProblemOutput{}, ErrPermissionDenied
+	}
+
 	problem, err := p.problemDataAccessor.GetProblemByID(ctx, in.ID)
 	if err != nil {
 		logger.Error("failed to get problem", zap.Error(err))
-		return GetProblemOutput{}, err
+		return GetProblemOutput{}, ErrInternal
 	}
 	if problem.ID == 0 {
-		err := ErrProblemNotFound
 		logger.Error("problem not found", zap.Error(err))
-		return GetProblemOutput{}, err
+		return GetProblemOutput{}, ErrProblemNotFound
+	}
+
+	author, err := p.accountDataAccessor.GetAccountByID(ctx, problem.AuthorID)
+	if err != nil {
+		logger.Error("failed to get author", zap.Error(err))
+		return GetProblemOutput{}, ErrInternal
+	}
+	if author.ID == 0 {
+		logger.Error("author not found", zap.Error(err))
+		return GetProblemOutput{}, ErrAccountNotFound
 	}
 
 	return GetProblemOutput{
-		Problem: Problem{
-			ID:          problem.ID,
-			DisplayName: problem.DisplayName,
-			AuthorId:    problem.AuthorID,
-			Description: problem.Description,
-			TimeLimit:   problem.TimeLimit,
-			MemoryLimit: problem.MemoryLimit,
-		},
+		Problem: p.dbProblemToLogicProblem(problem, author.Name),
 	}, nil
 }
 
 func (p *problemLogic) GetProblemList(ctx context.Context, in GetProblemListInput) (GetProblemListOutput, error) {
 	logger := p.logger.With(zap.String("method", "GetProblemList"))
 
-	// Retrieve the list of problems from the database
-	problems, err := p.problemDataAccessor.GetProblemList(ctx, in.Offset, in.Limit)
+	_, _, requestingAccountRole, _, err := p.tokenLogic.VerifyTokenString(ctx, in.Token)
+	if err != nil {
+		logger.Error("failed to verify token", zap.Error(err))
+		return GetProblemListOutput{}, ErrTokenInvalid
+	}
+
+	requiredPermissions := []gorbac.Permission{PermissionProblemsReadAll}
+	hasPermission, err := p.roleLogic.AccountHasPermission(ctx, ojs.Role_name[int32(requestingAccountRole)], requiredPermissions...)
+	if err != nil {
+		logger.With(zap.Error(err)).Error("failed to check permission")
+		return GetProblemListOutput{}, ErrInternal
+	}
+	if !hasPermission {
+		return GetProblemListOutput{}, ErrPermissionDenied
+	}
+
+	dbProblemList, err := p.problemDataAccessor.GetProblemList(ctx, in.Offset, in.Limit)
 	if err != nil {
 		logger.Error("failed to get problem list", zap.Error(err))
 		return GetProblemListOutput{}, err
 	}
-	total, err := p.problemDataAccessor.GetProblemCount(ctx)
+	totalProblemCount, err := p.problemDataAccessor.GetProblemCount(ctx)
 	if err != nil {
 		logger.Error("failed to get problem count", zap.Error(err))
 		return GetProblemListOutput{}, err
 	}
 
 	var problemList []Problem
-	for _, pb := range problems {
-		problemList = append(problemList, Problem{
-			ID:          pb.ID,
-			DisplayName: pb.DisplayName,
-			AuthorId:    pb.AuthorID,
-			Description: pb.Description,
-			TimeLimit:   pb.TimeLimit,
-			MemoryLimit: pb.MemoryLimit,
-		})
+	for _, pb := range dbProblemList {
+		author, err := p.accountDataAccessor.GetAccountByID(ctx, pb.AuthorID)
+		if err != nil {
+			logger.With(zap.Error(err)).Error("failed to get author")
+			return GetProblemListOutput{}, ErrInternal
+		}
+		if author.ID == 0 {
+			logger.With(zap.Error(err)).Error("author not found")
+			return GetProblemListOutput{}, ErrAccountNotFound
+		}
+
+		problemList = append(problemList, p.dbProblemToLogicProblem(pb, author.Name))
 	}
 
 	return GetProblemListOutput{
 		Problems:          problemList,
-		TotalProblemCount: total,
+		TotalProblemCount: totalProblemCount,
 	}, nil
 }
 
 func (p *problemLogic) UpdateProblem(ctx context.Context, in UpdateProblemInput) (UpdateProblemOutput, error) {
 	logger := p.logger.With(zap.String("method", "UpdateProblem"))
 
-	accountID, accountName, accountRole, _, err := p.tokenLogic.VerifyTokenString(ctx, in.Token)
+	requestingAccountID, _, requestingAccountRole, _, err := p.tokenLogic.VerifyTokenString(ctx, in.Token)
 	if err != nil {
 		logger.Error("failed to verify token", zap.Error(err))
-		return UpdateProblemOutput{}, err
-	}
-	if ojs.Role(accountRole) != ojs.Role_Admin {
-		return UpdateProblemOutput{}, ErrPermissionDenied
+		return UpdateProblemOutput{}, ErrTokenInvalid
 	}
 
-	// Check if the problem exists
 	problem, err := p.problemDataAccessor.GetProblemByID(ctx, in.ID)
 	if err != nil {
 		logger.Error("failed to get problem", zap.Error(err))
 		return UpdateProblemOutput{}, err
 	}
 	if problem.ID == 0 {
-		err := ErrProblemNotFound
 		logger.Error("problem not found", zap.Error(err))
-		return UpdateProblemOutput{}, err
+		return UpdateProblemOutput{}, ErrProblemNotFound
 	}
-	if problem.AuthorID != accountID {
+
+	requiredPermissions := []gorbac.Permission{PermissionAccountsWriteAll}
+	if requestingAccountID == problem.AuthorID {
+		requiredPermissions = append(requiredPermissions, PermissionAccountsWriteSelf)
+	}
+
+	hasPermission, err := p.roleLogic.AccountHasPermission(ctx, ojs.Role_name[int32(requestingAccountRole)], requiredPermissions...)
+	if err != nil {
+		logger.With(zap.Error(err)).Error("failed to check permission")
+		return UpdateProblemOutput{}, ErrInternal
+	}
+	if !hasPermission {
 		return UpdateProblemOutput{}, ErrPermissionDenied
+	}
+
+	author, err := p.accountDataAccessor.GetAccountByID(ctx, problem.AuthorID)
+	if err != nil {
+		logger.With(zap.Error(err)).Error("failed to get author")
+		return UpdateProblemOutput{}, ErrInternal
+	}
+	if author.ID == 0 {
+		logger.With(zap.Error(err)).Error("author not found")
+		return UpdateProblemOutput{}, ErrAccountNotFound
 	}
 
 	// Update the problem in the database
@@ -185,41 +238,62 @@ func (p *problemLogic) UpdateProblem(ctx context.Context, in UpdateProblemInput)
 	}
 
 	return UpdateProblemOutput{
-		Problem: Problem{
-			ID:          updatedProblem.ID,
-			DisplayName: updatedProblem.DisplayName,
-			AuthorId:    updatedProblem.AuthorID,
-			AuthorName:  accountName,
-			Description: updatedProblem.Description,
-			TimeLimit:   updatedProblem.TimeLimit,
-			MemoryLimit: updatedProblem.MemoryLimit,
-		},
+		Problem: p.dbProblemToLogicProblem(updatedProblem, author.Name),
 	}, nil
 }
 
 func (p *problemLogic) DeleteProblem(ctx context.Context, in DeleteProblemInput) error {
 	logger := p.logger.With(zap.String("method", "DeleteProblem"))
 
-	// Check if the problem exists
 	problem, err := p.problemDataAccessor.GetProblemByID(ctx, in.ID)
 	if err != nil {
 		logger.Error("failed to get problem", zap.Error(err))
-		return err
+		return ErrInternal
 	}
 	if problem.ID == 0 {
-		err := ErrProblemNotFound
 		logger.Error("problem not found", zap.Error(err))
-		return err
+		return ErrProblemNotFound
 	}
 
-	// Delete the problem from the database
+	requestingAccountID, _, requestingAccountRole, _, err := p.tokenLogic.VerifyTokenString(ctx, in.Token)
+	if err != nil {
+		logger.Error("failed to verify token", zap.Error(err))
+		return ErrTokenInvalid
+	}
+
+	requiredPermissions := []gorbac.Permission{PermissionAccountsWriteAll}
+	if requestingAccountID == problem.AuthorID {
+		requiredPermissions = append(requiredPermissions, PermissionAccountsWriteSelf)
+	}
+
+	hasPermission, err := p.roleLogic.AccountHasPermission(ctx, ojs.Role_name[int32(requestingAccountRole)], requiredPermissions...)
+	if err != nil {
+		logger.With(zap.Error(err)).Error("failed to check permission")
+		return ErrInternal
+	}
+	if !hasPermission {
+		return ErrPermissionDenied
+	}
+
 	err = p.problemDataAccessor.DeleteProblem(ctx, in.ID)
 	if err != nil {
 		logger.Error("failed to delete problem", zap.Error(err))
-		return err
+		return ErrInternal
 	}
 
 	return nil
+}
+
+func (p *problemLogic) dbProblemToLogicProblem(dbProblem database.Problem, accountName string) Problem {
+	return Problem{
+		ID:          dbProblem.ID,
+		DisplayName: dbProblem.DisplayName,
+		AuthorId:    dbProblem.AuthorID,
+		AuthorName:  accountName,
+		Description: dbProblem.Description,
+		TimeLimit:   dbProblem.TimeLimit,
+		MemoryLimit: dbProblem.MemoryLimit,
+	}
 }
 
 type CreateProblemInput struct {
@@ -281,4 +355,3 @@ type DeleteProblemInput struct {
 	Token string
 	ID    uint64
 }
-

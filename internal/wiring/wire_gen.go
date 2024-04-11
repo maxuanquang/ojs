@@ -72,17 +72,18 @@ func InitializeStandaloneServer(configFilePath configs.ConfigFilePath, appArgume
 		cleanup()
 		return app.StandaloneServer{}, nil, err
 	}
+	roleLogic := logic.NewRoleLogic(logger)
 	takenAccountName, err := cache.NewTakenAccountName(client)
 	if err != nil {
 		cleanup2()
 		cleanup()
 		return app.StandaloneServer{}, nil, err
 	}
-	accountLogic := logic.NewAccountLogic(databaseDatabase, accountDataAccessor, accountPasswordDataAccessor, hashLogic, tokenLogic, takenAccountName, logger)
+	accountLogic := logic.NewAccountLogic(databaseDatabase, accountDataAccessor, accountPasswordDataAccessor, hashLogic, tokenLogic, roleLogic, takenAccountName, logger)
 	problemDataAccessor := database.NewProblemDataAccessor(databaseDatabase, logger)
 	submissionDataAccessor := database.NewSubmissionDataAccessor(databaseDatabase, logger)
 	testCaseDataAccessor := database.NewTestCaseDataAccessor(databaseDatabase, logger)
-	problemLogic := logic.NewProblemLogic(logger, accountDataAccessor, problemDataAccessor, submissionDataAccessor, testCaseDataAccessor, tokenLogic)
+	problemLogic := logic.NewProblemLogic(logger, accountDataAccessor, problemDataAccessor, submissionDataAccessor, testCaseDataAccessor, tokenLogic, roleLogic)
 	clientClient, err := utils.InitializeDockerClient()
 	if err != nil {
 		cleanup2()
@@ -115,8 +116,8 @@ func InitializeStandaloneServer(configFilePath configs.ConfigFilePath, appArgume
 		cleanup()
 		return app.StandaloneServer{}, nil, err
 	}
-	submissionLogic := logic.NewSubmissionLogic(logger, accountDataAccessor, problemDataAccessor, submissionDataAccessor, testCaseDataAccessor, tokenLogic, judgeLogic, submissionCreatedProducer, databaseDatabase)
-	testCaseLogic := logic.NewTestCaseLogic(logger, accountDataAccessor, problemDataAccessor, submissionDataAccessor, testCaseDataAccessor, tokenLogic)
+	submissionLogic := logic.NewSubmissionLogic(logger, accountDataAccessor, problemDataAccessor, submissionDataAccessor, testCaseDataAccessor, tokenLogic, judgeLogic, roleLogic, submissionCreatedProducer, databaseDatabase)
+	testCaseLogic := logic.NewTestCaseLogic(logger, accountDataAccessor, problemDataAccessor, submissionDataAccessor, testCaseDataAccessor, tokenLogic, roleLogic)
 	ojsServiceServer := grpc.NewHandler(accountLogic, problemLogic, submissionLogic, testCaseLogic)
 	server := grpc.NewServer(configsGRPC, ojsServiceServer)
 	configsHTTP := config.HTTP
@@ -192,17 +193,18 @@ func InitializeHTTPServer(configFilePath configs.ConfigFilePath, appArguments ut
 		cleanup()
 		return app.HTTPServer{}, nil, err
 	}
+	roleLogic := logic.NewRoleLogic(logger)
 	takenAccountName, err := cache.NewTakenAccountName(client)
 	if err != nil {
 		cleanup2()
 		cleanup()
 		return app.HTTPServer{}, nil, err
 	}
-	accountLogic := logic.NewAccountLogic(databaseDatabase, accountDataAccessor, accountPasswordDataAccessor, hashLogic, tokenLogic, takenAccountName, logger)
+	accountLogic := logic.NewAccountLogic(databaseDatabase, accountDataAccessor, accountPasswordDataAccessor, hashLogic, tokenLogic, roleLogic, takenAccountName, logger)
 	problemDataAccessor := database.NewProblemDataAccessor(databaseDatabase, logger)
 	submissionDataAccessor := database.NewSubmissionDataAccessor(databaseDatabase, logger)
 	testCaseDataAccessor := database.NewTestCaseDataAccessor(databaseDatabase, logger)
-	problemLogic := logic.NewProblemLogic(logger, accountDataAccessor, problemDataAccessor, submissionDataAccessor, testCaseDataAccessor, tokenLogic)
+	problemLogic := logic.NewProblemLogic(logger, accountDataAccessor, problemDataAccessor, submissionDataAccessor, testCaseDataAccessor, tokenLogic, roleLogic)
 	clientClient, err := utils.InitializeDockerClient()
 	if err != nil {
 		cleanup2()
@@ -235,8 +237,8 @@ func InitializeHTTPServer(configFilePath configs.ConfigFilePath, appArguments ut
 		cleanup()
 		return app.HTTPServer{}, nil, err
 	}
-	submissionLogic := logic.NewSubmissionLogic(logger, accountDataAccessor, problemDataAccessor, submissionDataAccessor, testCaseDataAccessor, tokenLogic, judgeLogic, submissionCreatedProducer, databaseDatabase)
-	testCaseLogic := logic.NewTestCaseLogic(logger, accountDataAccessor, problemDataAccessor, submissionDataAccessor, testCaseDataAccessor, tokenLogic)
+	submissionLogic := logic.NewSubmissionLogic(logger, accountDataAccessor, problemDataAccessor, submissionDataAccessor, testCaseDataAccessor, tokenLogic, judgeLogic, roleLogic, submissionCreatedProducer, databaseDatabase)
+	testCaseLogic := logic.NewTestCaseLogic(logger, accountDataAccessor, problemDataAccessor, submissionDataAccessor, testCaseDataAccessor, tokenLogic, roleLogic)
 	ojsServiceServer := grpc.NewHandler(accountLogic, problemLogic, submissionLogic, testCaseLogic)
 	server := grpc.NewServer(configsGRPC, ojsServiceServer)
 	configsHTTP := config.HTTP
@@ -312,6 +314,7 @@ func InitializeWorker(configFilePath configs.ConfigFilePath, appArguments utils.
 		cleanup()
 		return app.Worker{}, nil, err
 	}
+	roleLogic := logic.NewRoleLogic(logger)
 	mq := config.MQ
 	adminAdmin, err := admin.NewAdmin(logger, mq)
 	if err != nil {
@@ -331,7 +334,7 @@ func InitializeWorker(configFilePath configs.ConfigFilePath, appArguments utils.
 		cleanup()
 		return app.Worker{}, nil, err
 	}
-	submissionLogic := logic.NewSubmissionLogic(logger, accountDataAccessor, problemDataAccessor, submissionDataAccessor, testCaseDataAccessor, tokenLogic, judgeLogic, submissionCreatedProducer, databaseDatabase)
+	submissionLogic := logic.NewSubmissionLogic(logger, accountDataAccessor, problemDataAccessor, submissionDataAccessor, testCaseDataAccessor, tokenLogic, judgeLogic, roleLogic, submissionCreatedProducer, databaseDatabase)
 	submissionCreatedHandler, err := consumer.NewSubmissionCreatedHandler(submissionLogic, logger)
 	if err != nil {
 		cleanup2()

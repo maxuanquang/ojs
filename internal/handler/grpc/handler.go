@@ -100,7 +100,8 @@ func (h *Handler) CreateAccount(ctx context.Context, in *ojs.CreateAccountReques
 // GetAccount implements ojs.OjsServiceServer.
 func (h *Handler) GetAccount(ctx context.Context, in *ojs.GetAccountRequest) (*ojs.GetAccountResponse, error) {
 	output, err := h.accountLogic.GetAccount(ctx, logic.GetAccountInput{
-		ID: in.Id,
+		ID:    in.Id,
+		Token: h.getAuthTokenFromMetadata(ctx),
 	})
 	if err != nil {
 		return nil, clientResponseError(err)
@@ -293,6 +294,7 @@ func (h *Handler) CreateTestCase(ctx context.Context, in *ojs.CreateTestCaseRequ
 			Input:       in.GetInput(),
 			Output:      in.GetOutput(),
 			IsHidden:    in.GetIsHidden(),
+			Token:       h.getAuthTokenFromMetadata(ctx),
 		},
 	)
 	if err != nil {
@@ -319,6 +321,7 @@ func (h *Handler) GetTestCase(ctx context.Context, in *ojs.GetTestCaseRequest) (
 		ctx,
 		logic.GetTestCaseInput{
 			ID: in.GetId(),
+			Token: h.getAuthTokenFromMetadata(ctx),
 		},
 	)
 	if err != nil {
@@ -347,6 +350,7 @@ func (h *Handler) GetProblemTestCaseList(ctx context.Context, in *ojs.GetProblem
 			OfProblemID: in.GetId(),
 			Offset:      in.GetOffset(),
 			Limit:       in.GetLimit(),
+			Token:       h.getAuthTokenFromMetadata(ctx),
 		},
 	)
 	if err != nil {
@@ -378,6 +382,7 @@ func (h *Handler) DeleteTestCase(ctx context.Context, in *ojs.DeleteTestCaseRequ
 		ctx,
 		logic.DeleteTestCaseInput{
 			ID: in.GetId(),
+			Token: h.getAuthTokenFromMetadata(ctx),
 		},
 	)
 	if err != nil {

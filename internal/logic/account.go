@@ -9,6 +9,7 @@ import (
 	"github.com/maxuanquang/ojs/internal/dataaccess/database"
 	"github.com/maxuanquang/ojs/internal/generated/grpc/ojs"
 	"github.com/maxuanquang/ojs/internal/utils"
+	"github.com/mikespook/gorbac"
 	"go.uber.org/zap"
 	"gorm.io/gorm"
 
@@ -29,7 +30,8 @@ type CreateAccountOutput struct {
 }
 
 type GetAccountInput struct {
-	ID uint64
+	ID    uint64
+	Token string
 }
 
 type GetAccountOutput struct {
@@ -68,6 +70,7 @@ func NewAccountLogic(
 	passwordDataAccessor database.AccountPasswordDataAccessor,
 	hashLogic HashLogic,
 	tokenLogic TokenLogic,
+	roleLogic RoleLogic,
 	takenAccountNameCache cache.TakenAccountName,
 	logger *zap.Logger,
 ) AccountLogic {
@@ -77,6 +80,7 @@ func NewAccountLogic(
 		passwordDataAccessor:  passwordDataAccessor,
 		hashLogic:             hashLogic,
 		tokenLogic:            tokenLogic,
+		roleLogic:             roleLogic,
 		takenAccountNameCache: takenAccountNameCache,
 		logger:                logger,
 	}
@@ -88,6 +92,7 @@ type accountLogic struct {
 	passwordDataAccessor  database.AccountPasswordDataAccessor
 	hashLogic             HashLogic
 	tokenLogic            TokenLogic
+	roleLogic             RoleLogic
 	takenAccountNameCache cache.TakenAccountName
 	logger                *zap.Logger
 }
@@ -95,19 +100,38 @@ type accountLogic struct {
 func (a *accountLogic) GetAccount(ctx context.Context, in GetAccountInput) (GetAccountOutput, error) {
 	logger := utils.LoggerWithContext(ctx, a.logger).With(zap.Any("get_account_input", in))
 
-	account, err := a.accountDataAccessor.GetAccountByID(ctx, in.ID)
+	foundAccount, err := a.accountDataAccessor.GetAccountByID(ctx, in.ID)
 	if err != nil {
 		logger.Error("failed to get account", zap.Error(err))
 		return GetAccountOutput{}, status.Error(codes.Internal, "failed to get account")
 	}
-	if account.ID == 0 {
+	if foundAccount.ID == 0 {
 		return GetAccountOutput{}, status.Error(codes.NotFound, "account not found")
 	}
 
+	requestingAccountID, _, _, _, err := a.tokenLogic.VerifyTokenString(ctx, in.Token)
+	if err != nil {
+		logger.With(zap.Error(err)).Error("failed to find account from token")
+		return GetAccountOutput{}, status.Error(codes.NotFound, "account not found")
+	}
+
+	requiredPermissions := []gorbac.Permission{PermissionAccountsReadAll}
+	if requestingAccountID == in.ID {
+		requiredPermissions = append(requiredPermissions, PermissionAccountsReadSelf)
+	}
+
+	hasPermission, err := a.roleLogic.AccountHasPermission(ctx, ojs.Role_name[int32(foundAccount.Role)], requiredPermissions...)
+	if err != nil {
+		return GetAccountOutput{}, err
+	}
+	if !hasPermission {
+		return GetAccountOutput{}, status.Error(codes.PermissionDenied, "permission denied")
+	}
+
 	return GetAccountOutput{
-		ID:   account.ID,
-		Name: account.Name,
-		Role: ojs.Role(account.Role),
+		ID:   foundAccount.ID,
+		Name: foundAccount.Name,
+		Role: ojs.Role(foundAccount.Role),
 	}, nil
 }
 

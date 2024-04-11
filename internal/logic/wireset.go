@@ -11,4 +11,5 @@ var WireSet = wire.NewSet(
 	NewTestCaseLogic,
 	NewJudgeLogic,
 	NewCompileLogic,
+	NewRoleLogic,
 )
