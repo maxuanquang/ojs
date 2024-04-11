@@ -2,6 +2,7 @@ package logic
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
@@ -145,7 +146,7 @@ func (a *accountLogic) CreateAccount(ctx context.Context, in CreateAccountInput)
 		return CreateAccountOutput{}, status.Error(codes.Internal, "failed to check if account name taken")
 	}
 	if taken {
-		return CreateAccountOutput{}, status.Error(codes.AlreadyExists, "account name already exists")
+		return CreateAccountOutput{}, ErrAccountAlreadyExists
 	}
 
 	var createAccountOutput CreateAccountOutput
@@ -159,6 +160,9 @@ func (a *accountLogic) CreateAccount(ctx context.Context, in CreateAccountInput)
 			},
 		)
 		if err != nil {
+			if errors.Is(err, database.ErrAccountAlreadyExists) {
+				return ErrAccountAlreadyExists
+			}
 			return fmt.Errorf("error creating account: %w", err)
 		}
 
@@ -180,7 +184,7 @@ func (a *accountLogic) CreateAccount(ctx context.Context, in CreateAccountInput)
 	})
 	if txErr != nil {
 		logger.With(zap.Error(txErr)).Error("create account transaction failed")
-		return CreateAccountOutput{}, status.Error(codes.Internal, txErr.Error())
+		return CreateAccountOutput{}, txErr
 	}
 
 	err = a.takenAccountNameCache.Add(ctx, createAccountOutput.Name)

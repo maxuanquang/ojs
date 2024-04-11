@@ -1012,7 +1012,8 @@
         "UndefinedRole",
         "Admin",
         "Contester",
-        "ProblemSetter"
+        "ProblemSetter",
+        "Worker"
       ],
       "default": "UndefinedRole"
     },

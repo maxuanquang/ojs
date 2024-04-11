@@ -320,7 +320,7 @@ func (h *Handler) GetTestCase(ctx context.Context, in *ojs.GetTestCaseRequest) (
 	output, err := h.testCaseLogic.GetTestCase(
 		ctx,
 		logic.GetTestCaseInput{
-			ID: in.GetId(),
+			ID:    in.GetId(),
 			Token: h.getAuthTokenFromMetadata(ctx),
 		},
 	)
@@ -381,7 +381,7 @@ func (h *Handler) DeleteTestCase(ctx context.Context, in *ojs.DeleteTestCaseRequ
 	err := h.testCaseLogic.DeleteTestCase(
 		ctx,
 		logic.DeleteTestCaseInput{
-			ID: in.GetId(),
+			ID:    in.GetId(),
 			Token: h.getAuthTokenFromMetadata(ctx),
 		},
 	)
@@ -402,6 +402,7 @@ func (h *Handler) UpdateTestCase(ctx context.Context, in *ojs.UpdateTestCaseRequ
 			Input:    in.GetInput(),
 			Output:   in.GetOutput(),
 			IsHidden: in.GetIsHidden(),
+			Token:    h.getAuthTokenFromMetadata(ctx),
 		},
 	)
 	if err != nil {
@@ -461,6 +462,7 @@ func (h *Handler) GetProblemSubmissionList(ctx context.Context, in *ojs.GetProbl
 			OfProblemID: in.GetId(),
 			Offset:      in.GetOffset(),
 			Limit:       in.GetLimit(),
+			Token:       h.getAuthTokenFromMetadata(ctx),
 		},
 	)
 	if err != nil {
@@ -495,7 +497,8 @@ func (h *Handler) GetSubmission(ctx context.Context, in *ojs.GetSubmissionReques
 	output, err := h.submissionLogic.GetSubmission(
 		ctx,
 		logic.GetSubmissionInput{
-			ID: in.GetId(),
+			ID:    in.GetId(),
+			Token: h.getAuthTokenFromMetadata(ctx),
 		},
 	)
 	if err != nil {
@@ -526,6 +529,7 @@ func (h *Handler) GetSubmissionList(ctx context.Context, in *ojs.GetSubmissionLi
 		logic.GetSubmissionListInput{
 			Offset: in.GetOffset(),
 			Limit:  in.GetLimit(),
+			Token:  h.getAuthTokenFromMetadata(ctx),
 		},
 	)
 	if err != nil {

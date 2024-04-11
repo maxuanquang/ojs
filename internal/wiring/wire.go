@@ -40,3 +40,9 @@ func InitializeWorker(configFilePath configs.ConfigFilePath, appArguments utils.
 
 	return app.Worker{}, nil, nil
 }
+
+func InitializeCron(configFilePath configs.ConfigFilePath, appArguments utils.Arguments) (app.Cron, func(), error) {
+	wire.Build(WireSet)
+
+	return app.Cron{}, nil, nil
+}

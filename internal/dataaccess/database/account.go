@@ -48,7 +48,7 @@ func (a *accountDataAccessor) CreateAccount(ctx context.Context, account Account
 	result := a.database.Create(&createdAccount)
 	if result.Error != nil {
 		if errors.Is(result.Error, gorm.ErrDuplicatedKey) {
-			return Account{}, nil
+			return Account{}, ErrAccountAlreadyExists
 		}
 
 		logger := utils.LoggerWithContext(ctx, a.logger).With(zap.String("name", account.Name))

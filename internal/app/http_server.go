@@ -32,12 +32,12 @@ func (h *HTTPServer) Start() {
 
 	go func() {
 		err := h.grpcServer.Start(context.Background())
-		h.logger.With(zap.Error(err)).Error("can not start GRPC Server")
+		h.logger.With(zap.Error(err)).Error("gRPC server stopped")
 	}()
 
 	go func() {
 		err := h.httpServer.Start(context.Background())
-		h.logger.With(zap.Error(err)).Error("can not start HTTP Server")
+		h.logger.With(zap.Error(err)).Error("http server stopped")
 	}()
 
 	utils.WaitForSignals(syscall.SIGINT, syscall.SIGTERM)

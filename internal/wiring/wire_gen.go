@@ -20,6 +20,7 @@ import (
 	"github.com/maxuanquang/ojs/internal/handler/consumer"
 	"github.com/maxuanquang/ojs/internal/handler/grpc"
 	"github.com/maxuanquang/ojs/internal/handler/http"
+	"github.com/maxuanquang/ojs/internal/handler/jobs"
 	"github.com/maxuanquang/ojs/internal/logic"
 	"github.com/maxuanquang/ojs/internal/utils"
 )
@@ -122,7 +123,8 @@ func InitializeStandaloneServer(configFilePath configs.ConfigFilePath, appArgume
 	server := grpc.NewServer(configsGRPC, ojsServiceServer)
 	configsHTTP := config.HTTP
 	httpServer := http.NewServer(configsHTTP, configsGRPC, auth, logger)
-	submissionCreatedHandler, err := consumer.NewSubmissionCreatedHandler(submissionLogic, logger)
+	cron := config.Cron
+	submissionCreatedHandler, err := consumer.NewSubmissionCreatedHandler(accountLogic, cron, submissionLogic, logger)
 	if err != nil {
 		cleanup2()
 		cleanup()
@@ -135,7 +137,19 @@ func InitializeStandaloneServer(configFilePath configs.ConfigFilePath, appArgume
 		return app.StandaloneServer{}, nil, err
 	}
 	rootConsumer := consumer.NewRootConsumer(submissionCreatedHandler, consumerConsumer, logger)
-	standaloneServer, err := app.NewStandaloneServer(server, httpServer, rootConsumer, logger)
+	createSystemAccountsJob, err := jobs.NewCreateSystemAccountsJob(accountLogic, cron, logger)
+	if err != nil {
+		cleanup2()
+		cleanup()
+		return app.StandaloneServer{}, nil, err
+	}
+	jobsCron, err := jobs.NewCron(logger, createSystemAccountsJob)
+	if err != nil {
+		cleanup2()
+		cleanup()
+		return app.StandaloneServer{}, nil, err
+	}
+	standaloneServer, err := app.NewStandaloneServer(server, httpServer, rootConsumer, jobsCron, logger)
 	if err != nil {
 		cleanup2()
 		cleanup()
@@ -260,28 +274,27 @@ func InitializeWorker(configFilePath configs.ConfigFilePath, appArguments utils.
 	if err != nil {
 		return app.Worker{}, nil, err
 	}
-	log := config.Log
-	logger, cleanup, err := utils.InitializeLogger(log)
+	configsDatabase := config.Database
+	databaseDatabase, cleanup, err := database.InitializeDB(configsDatabase)
 	if err != nil {
 		return app.Worker{}, nil, err
 	}
-	configsDatabase := config.Database
-	databaseDatabase, cleanup2, err := database.InitializeDB(configsDatabase)
+	log := config.Log
+	logger, cleanup2, err := utils.InitializeLogger(log)
 	if err != nil {
 		cleanup()
 		return app.Worker{}, nil, err
 	}
 	accountDataAccessor := database.NewAccountDataAccessor(databaseDatabase, logger)
-	problemDataAccessor := database.NewProblemDataAccessor(databaseDatabase, logger)
-	submissionDataAccessor := database.NewSubmissionDataAccessor(databaseDatabase, logger)
-	testCaseDataAccessor := database.NewTestCaseDataAccessor(databaseDatabase, logger)
+	accountPasswordDataAccessor := database.NewAccountPasswordDataAccessor(databaseDatabase, logger)
+	auth := config.Auth
+	hashLogic := logic.NewHashLogic(auth)
 	tokenPublicKeyDataAccessor, err := database.NewTokenPublicKeyDataAccessor(databaseDatabase, logger)
 	if err != nil {
 		cleanup2()
 		cleanup()
 		return app.Worker{}, nil, err
 	}
-	auth := config.Auth
 	configsCache := config.Cache
 	client, err := cache.NewClient(configsCache, logger)
 	if err != nil {
@@ -301,6 +314,18 @@ func InitializeWorker(configFilePath configs.ConfigFilePath, appArguments utils.
 		cleanup()
 		return app.Worker{}, nil, err
 	}
+	roleLogic := logic.NewRoleLogic(logger)
+	takenAccountName, err := cache.NewTakenAccountName(client)
+	if err != nil {
+		cleanup2()
+		cleanup()
+		return app.Worker{}, nil, err
+	}
+	accountLogic := logic.NewAccountLogic(databaseDatabase, accountDataAccessor, accountPasswordDataAccessor, hashLogic, tokenLogic, roleLogic, takenAccountName, logger)
+	cron := config.Cron
+	problemDataAccessor := database.NewProblemDataAccessor(databaseDatabase, logger)
+	submissionDataAccessor := database.NewSubmissionDataAccessor(databaseDatabase, logger)
+	testCaseDataAccessor := database.NewTestCaseDataAccessor(databaseDatabase, logger)
 	clientClient, err := utils.InitializeDockerClient()
 	if err != nil {
 		cleanup2()
@@ -314,7 +339,6 @@ func InitializeWorker(configFilePath configs.ConfigFilePath, appArguments utils.
 		cleanup()
 		return app.Worker{}, nil, err
 	}
-	roleLogic := logic.NewRoleLogic(logger)
 	mq := config.MQ
 	adminAdmin, err := admin.NewAdmin(logger, mq)
 	if err != nil {
@@ -335,7 +359,7 @@ func InitializeWorker(configFilePath configs.ConfigFilePath, appArguments utils.
 		return app.Worker{}, nil, err
 	}
 	submissionLogic := logic.NewSubmissionLogic(logger, accountDataAccessor, problemDataAccessor, submissionDataAccessor, testCaseDataAccessor, tokenLogic, judgeLogic, roleLogic, submissionCreatedProducer, databaseDatabase)
-	submissionCreatedHandler, err := consumer.NewSubmissionCreatedHandler(submissionLogic, logger)
+	submissionCreatedHandler, err := consumer.NewSubmissionCreatedHandler(accountLogic, cron, submissionLogic, logger)
 	if err != nil {
 		cleanup2()
 		cleanup()
@@ -355,6 +379,84 @@ func InitializeWorker(configFilePath configs.ConfigFilePath, appArguments utils.
 		return app.Worker{}, nil, err
 	}
 	return worker, func() {
+		cleanup2()
+		cleanup()
+	}, nil
+}
+
+func InitializeCron(configFilePath configs.ConfigFilePath, appArguments utils.Arguments) (app.Cron, func(), error) {
+	config, err := configs.NewConfig(configFilePath)
+	if err != nil {
+		return app.Cron{}, nil, err
+	}
+	log := config.Log
+	logger, cleanup, err := utils.InitializeLogger(log)
+	if err != nil {
+		return app.Cron{}, nil, err
+	}
+	configsDatabase := config.Database
+	databaseDatabase, cleanup2, err := database.InitializeDB(configsDatabase)
+	if err != nil {
+		cleanup()
+		return app.Cron{}, nil, err
+	}
+	accountDataAccessor := database.NewAccountDataAccessor(databaseDatabase, logger)
+	accountPasswordDataAccessor := database.NewAccountPasswordDataAccessor(databaseDatabase, logger)
+	auth := config.Auth
+	hashLogic := logic.NewHashLogic(auth)
+	tokenPublicKeyDataAccessor, err := database.NewTokenPublicKeyDataAccessor(databaseDatabase, logger)
+	if err != nil {
+		cleanup2()
+		cleanup()
+		return app.Cron{}, nil, err
+	}
+	configsCache := config.Cache
+	client, err := cache.NewClient(configsCache, logger)
+	if err != nil {
+		cleanup2()
+		cleanup()
+		return app.Cron{}, nil, err
+	}
+	tokenPublicKey, err := cache.NewTokenPublicKey(client)
+	if err != nil {
+		cleanup2()
+		cleanup()
+		return app.Cron{}, nil, err
+	}
+	tokenLogic, err := logic.NewTokenLogic(accountDataAccessor, tokenPublicKeyDataAccessor, logger, auth, tokenPublicKey)
+	if err != nil {
+		cleanup2()
+		cleanup()
+		return app.Cron{}, nil, err
+	}
+	roleLogic := logic.NewRoleLogic(logger)
+	takenAccountName, err := cache.NewTakenAccountName(client)
+	if err != nil {
+		cleanup2()
+		cleanup()
+		return app.Cron{}, nil, err
+	}
+	accountLogic := logic.NewAccountLogic(databaseDatabase, accountDataAccessor, accountPasswordDataAccessor, hashLogic, tokenLogic, roleLogic, takenAccountName, logger)
+	cron := config.Cron
+	createSystemAccountsJob, err := jobs.NewCreateSystemAccountsJob(accountLogic, cron, logger)
+	if err != nil {
+		cleanup2()
+		cleanup()
+		return app.Cron{}, nil, err
+	}
+	jobsCron, err := jobs.NewCron(logger, createSystemAccountsJob)
+	if err != nil {
+		cleanup2()
+		cleanup()
+		return app.Cron{}, nil, err
+	}
+	appCron, err := app.NewCron(jobsCron, logger)
+	if err != nil {
+		cleanup2()
+		cleanup()
+		return app.Cron{}, nil, err
+	}
+	return appCron, func() {
 		cleanup2()
 		cleanup()
 	}, nil

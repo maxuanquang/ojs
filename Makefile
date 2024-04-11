@@ -80,6 +80,10 @@ http-server:
 worker:
 	go run ./cmd/ojs/main.go worker
 
+.PHONY: cron
+cron:
+	go run ./cmd/ojs/main.go cron
+
 .PHONY: docker-compose-dev-up
 docker-compose-dev-up:
 	docker compose -f ./internal/deployments/docker-compose.dev.yml up -d

@@ -3,6 +3,7 @@ package consumer
 import (
 	"context"
 
+	"github.com/maxuanquang/ojs/internal/configs"
 	"github.com/maxuanquang/ojs/internal/logic"
 	"github.com/maxuanquang/ojs/internal/utils"
 	"go.uber.org/zap"
@@ -13,18 +14,33 @@ type SubmissionCreatedHandler interface {
 }
 
 func NewSubmissionCreatedHandler(
+	accountLogic logic.AccountLogic,
+	cronConfig configs.Cron,
 	submissionLogic logic.SubmissionLogic,
 	logger *zap.Logger,
 ) (SubmissionCreatedHandler, error) {
+	createSessionOutput, err := accountLogic.CreateSession(
+		context.Background(),
+		logic.CreateSessionInput{
+			Name:     cronConfig.CreateSystemAccounts.Worker.Name,
+			Password: cronConfig.CreateSystemAccounts.Worker.Password,
+		},
+	)
+	if err != nil {
+		return nil, err
+	}
+
 	return &submissionCreatedHandler{
 		submissionLogic: submissionLogic,
 		logger:          logger,
+		token:           createSessionOutput.Token,
 	}, nil
 }
 
 type submissionCreatedHandler struct {
 	submissionLogic logic.SubmissionLogic
 	logger          *zap.Logger
+	token           string
 }
 
 // Handle implements DownloadTaskCreatedHandler.
@@ -35,12 +51,12 @@ func (d *submissionCreatedHandler) Handle(ctx context.Context, submissionID uint
 	err := d.submissionLogic.ExecuteSubmission(
 		ctx,
 		logic.ExecuteSubmissionInput{
-			ID: submissionID,
+			ID:    submissionID,
+			Token: d.token,
 		},
 	)
 	if err != nil {
 		logger.With(zap.Error(err)).Error("failed to execute submission")
-		// return err
 	}
 
 	return nil

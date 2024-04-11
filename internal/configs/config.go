@@ -19,6 +19,7 @@ type Config struct {
 	GRPC     GRPC     `yaml:"grpc"`
 	MQ       MQ       `yaml:"mq"`
 	Judge    Judge    `yaml:"judge"`
+	Cron     Cron     `yaml:"cron"`
 }
 
 func NewConfig(configFilePath ConfigFilePath) (Config, error) {

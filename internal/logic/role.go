@@ -8,10 +8,10 @@ import (
 )
 
 const (
-	AccountRoleAdmin         = "admin"
-	AccountRoleProblemSetter = "problem_setter"
-	AccountRoleContester     = "contester"
-	AccountRoleWorker        = "worker"
+	AccountRoleAdmin         = "Admin"
+	AccountRoleProblemSetter = "ProblemSetter"
+	AccountRoleContester     = "Contester"
+	AccountRoleWorker        = "Worker"
 )
 
 var (

@@ -133,6 +133,7 @@ enum Role {
     Admin = 1;
     Contester = 2;
     ProblemSetter = 3;
+    Worker = 4;
 }
 
 message CreateAccountRequest {

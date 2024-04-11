@@ -29,6 +29,15 @@ mq:
   consumer_group_id: "ojs"
   topic: "submission_created"
   num_partitions: 2
+cron:
+  create_system_accounts:
+    schedule: "@once"
+    admin:
+      name: "admin"
+      password: "secret"
+    worker:
+      name: "worker"
+      password: "secret"
 judge:
   languages:
     - value: c
