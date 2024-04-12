@@ -20,7 +20,6 @@ type Cron interface {
 
 func NewCron(
 	logger *zap.Logger,
-	createSystemAccountsJob CreateSystemAccountsJob,
 ) (Cron, error) {
 	scheduler, err := gocron.NewScheduler()
 	if err != nil {
@@ -28,7 +27,7 @@ func NewCron(
 		return nil, err
 	}
 
-	err = scheduleCronJobs(scheduler, logger, createSystemAccountsJob)
+	err = scheduleCronJobs(scheduler, logger)
 	if err != nil {
 		logger.Error("failed to schedule jobs", zap.Error(err))
 		return nil, err
@@ -62,33 +61,21 @@ func (c *cron) Start(ctx context.Context) error {
 
 func scheduleCronJobs(scheduler gocron.Scheduler, logger *zap.Logger, jobs ...Job) error {
 	for _, job := range jobs {
-		switch job.GetSchedule() {
-		case "@once":
-			if _, err := scheduler.NewJob(
-				gocron.OneTimeJob(gocron.OneTimeJobStartImmediately()),
-				gocron.NewTask(func() {
-					err := job.Run(context.Background())
-					if err != nil {
-						logger.Error("failed to run job", zap.Error(err))
-					}
-				}),
-			); err != nil {
-				logger.Error("failed to schedule job", zap.Error(err))
-				return err
-			}
-		default:
-			if _, err := scheduler.NewJob(
-				gocron.CronJob(job.GetSchedule(), true),
-				gocron.NewTask(func() {
-					err := job.Run(context.Background())
-					if err != nil {
-						logger.Error("failed to run job", zap.Error(err))
-					}
-				}),
-			); err != nil {
-				logger.Error("failed to schedule job", zap.Error(err))
-				return err
-			}
+		if job.GetSchedule() == "" {
+			continue
+		}
+
+		if _, err := scheduler.NewJob(
+			gocron.CronJob(job.GetSchedule(), true),
+			gocron.NewTask(func() {
+				err := job.Run(context.Background())
+				if err != nil {
+					logger.Error("failed to run job", zap.Error(err))
+				}
+			}),
+		); err != nil {
+			logger.Error("failed to schedule job", zap.Error(err))
+			return err
 		}
 	}
 

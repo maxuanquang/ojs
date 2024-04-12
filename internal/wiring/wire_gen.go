@@ -124,7 +124,13 @@ func InitializeStandaloneServer(configFilePath configs.ConfigFilePath, appArgume
 	configsHTTP := config.HTTP
 	httpServer := http.NewServer(configsHTTP, configsGRPC, auth, logger)
 	cron := config.Cron
-	submissionCreatedHandler, err := consumer.NewSubmissionCreatedHandler(accountLogic, cron, submissionLogic, logger)
+	createSystemAccountsJob, err := jobs.NewCreateSystemAccountsJob(accountLogic, cron, logger)
+	if err != nil {
+		cleanup2()
+		cleanup()
+		return app.StandaloneServer{}, nil, err
+	}
+	submissionCreatedHandler, err := consumer.NewSubmissionCreatedHandler(accountLogic, cron, submissionLogic, createSystemAccountsJob, logger)
 	if err != nil {
 		cleanup2()
 		cleanup()
@@ -137,13 +143,7 @@ func InitializeStandaloneServer(configFilePath configs.ConfigFilePath, appArgume
 		return app.StandaloneServer{}, nil, err
 	}
 	rootConsumer := consumer.NewRootConsumer(submissionCreatedHandler, consumerConsumer, logger)
-	createSystemAccountsJob, err := jobs.NewCreateSystemAccountsJob(accountLogic, cron, logger)
-	if err != nil {
-		cleanup2()
-		cleanup()
-		return app.StandaloneServer{}, nil, err
-	}
-	jobsCron, err := jobs.NewCron(logger, createSystemAccountsJob)
+	jobsCron, err := jobs.NewCron(logger)
 	if err != nil {
 		cleanup2()
 		cleanup()
@@ -359,7 +359,13 @@ func InitializeWorker(configFilePath configs.ConfigFilePath, appArguments utils.
 		return app.Worker{}, nil, err
 	}
 	submissionLogic := logic.NewSubmissionLogic(logger, accountDataAccessor, problemDataAccessor, submissionDataAccessor, testCaseDataAccessor, tokenLogic, judgeLogic, roleLogic, submissionCreatedProducer, databaseDatabase)
-	submissionCreatedHandler, err := consumer.NewSubmissionCreatedHandler(accountLogic, cron, submissionLogic, logger)
+	createSystemAccountsJob, err := jobs.NewCreateSystemAccountsJob(accountLogic, cron, logger)
+	if err != nil {
+		cleanup2()
+		cleanup()
+		return app.Worker{}, nil, err
+	}
+	submissionCreatedHandler, err := consumer.NewSubmissionCreatedHandler(accountLogic, cron, submissionLogic, createSystemAccountsJob, logger)
 	if err != nil {
 		cleanup2()
 		cleanup()
@@ -394,70 +400,17 @@ func InitializeCron(configFilePath configs.ConfigFilePath, appArguments utils.Ar
 	if err != nil {
 		return app.Cron{}, nil, err
 	}
-	configsDatabase := config.Database
-	databaseDatabase, cleanup2, err := database.InitializeDB(configsDatabase)
+	cron, err := jobs.NewCron(logger)
 	if err != nil {
 		cleanup()
 		return app.Cron{}, nil, err
 	}
-	accountDataAccessor := database.NewAccountDataAccessor(databaseDatabase, logger)
-	accountPasswordDataAccessor := database.NewAccountPasswordDataAccessor(databaseDatabase, logger)
-	auth := config.Auth
-	hashLogic := logic.NewHashLogic(auth)
-	tokenPublicKeyDataAccessor, err := database.NewTokenPublicKeyDataAccessor(databaseDatabase, logger)
+	appCron, err := app.NewCron(cron, logger)
 	if err != nil {
-		cleanup2()
-		cleanup()
-		return app.Cron{}, nil, err
-	}
-	configsCache := config.Cache
-	client, err := cache.NewClient(configsCache, logger)
-	if err != nil {
-		cleanup2()
-		cleanup()
-		return app.Cron{}, nil, err
-	}
-	tokenPublicKey, err := cache.NewTokenPublicKey(client)
-	if err != nil {
-		cleanup2()
-		cleanup()
-		return app.Cron{}, nil, err
-	}
-	tokenLogic, err := logic.NewTokenLogic(accountDataAccessor, tokenPublicKeyDataAccessor, logger, auth, tokenPublicKey)
-	if err != nil {
-		cleanup2()
-		cleanup()
-		return app.Cron{}, nil, err
-	}
-	roleLogic := logic.NewRoleLogic(logger)
-	takenAccountName, err := cache.NewTakenAccountName(client)
-	if err != nil {
-		cleanup2()
-		cleanup()
-		return app.Cron{}, nil, err
-	}
-	accountLogic := logic.NewAccountLogic(databaseDatabase, accountDataAccessor, accountPasswordDataAccessor, hashLogic, tokenLogic, roleLogic, takenAccountName, logger)
-	cron := config.Cron
-	createSystemAccountsJob, err := jobs.NewCreateSystemAccountsJob(accountLogic, cron, logger)
-	if err != nil {
-		cleanup2()
-		cleanup()
-		return app.Cron{}, nil, err
-	}
-	jobsCron, err := jobs.NewCron(logger, createSystemAccountsJob)
-	if err != nil {
-		cleanup2()
-		cleanup()
-		return app.Cron{}, nil, err
-	}
-	appCron, err := app.NewCron(jobsCron, logger)
-	if err != nil {
-		cleanup2()
 		cleanup()
 		return app.Cron{}, nil, err
 	}
 	return appCron, func() {
-		cleanup2()
 		cleanup()
 	}, nil
 }

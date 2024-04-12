@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/maxuanquang/ojs/internal/configs"
+	"github.com/maxuanquang/ojs/internal/handler/jobs"
 	"github.com/maxuanquang/ojs/internal/logic"
 	"github.com/maxuanquang/ojs/internal/utils"
 	"go.uber.org/zap"
@@ -17,8 +18,15 @@ func NewSubmissionCreatedHandler(
 	accountLogic logic.AccountLogic,
 	cronConfig configs.Cron,
 	submissionLogic logic.SubmissionLogic,
+	createSystemAccountsJob jobs.CreateSystemAccountsJob,
 	logger *zap.Logger,
 ) (SubmissionCreatedHandler, error) {
+	err := createSystemAccountsJob.Run(context.Background())
+	if err != nil {
+		logger.With(zap.Error(err)).Error("failed to create system accounts")
+		return nil, err
+	}
+
 	createSessionOutput, err := accountLogic.CreateSession(
 		context.Background(),
 		logic.CreateSessionInput{
@@ -27,6 +35,7 @@ func NewSubmissionCreatedHandler(
 		},
 	)
 	if err != nil {
+		logger.With(zap.Error(err)).Error("failed to create session")
 		return nil, err
 	}
 
